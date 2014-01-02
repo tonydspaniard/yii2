@@ -7,7 +7,6 @@
 
 namespace yii\jui;
 
-use Yii;
 use yii\base\Model;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
@@ -48,9 +47,6 @@ class InputWidget extends Widget
 			throw new InvalidConfigException("Either 'name', or 'model' and 'attribute' properties must be specified.");
 		}
 		if ($this->hasModel() && !isset($this->options['id'])) {
-			$this->options['id'] = Html::getInputId($this->model, $this->attribute);
-		}
-		if($this->hasModel() && !array_key_exists('id', $this->options)) {
 			$this->options['id'] = Html::getInputId($this->model, $this->attribute);
 		}
 		parent::init();

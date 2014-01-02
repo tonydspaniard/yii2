@@ -22,7 +22,7 @@ class Log extends Base
 	public $category;
 
 	/**
-	 * @var integer ajax attribute input search value
+	 * @var integer message attribute input search value
 	 */
 	public $message;
 
@@ -59,7 +59,7 @@ class Log extends Base
 				'pageSize' => 10,
 			],
 			'sort' => [
-				'attributes' => ['time','level','category','message'],
+				'attributes' => ['time', 'level', 'category', 'message'],
 			],
 		]);
 
