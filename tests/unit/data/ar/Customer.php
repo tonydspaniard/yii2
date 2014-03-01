@@ -12,6 +12,9 @@ use yiiunit\framework\db\ActiveRecordTest;
  * @property string $email
  * @property string $address
  * @property integer $status
+ *
+ * @method CustomerQuery|Customer|null find($q = null) static
+ * @method CustomerQuery findBySql($sql, $params = []) static
  */
 class Customer extends ActiveRecord
 {
@@ -25,9 +28,30 @@ class Customer extends ActiveRecord
 		return 'tbl_customer';
 	}
 
+	public function getProfile()
+	{
+		return $this->hasOne(Profile::className(), ['id' => 'profile_id']);
+	}
+
 	public function getOrders()
 	{
 		return $this->hasMany(Order::className(), ['customer_id' => 'id'])->orderBy('id');
+	}
+
+	public function getOrders2()
+	{
+		return $this->hasMany(Order::className(), ['customer_id' => 'id'])->inverseOf('customer2')->orderBy('id');
+	}
+
+	// deeply nested table relation
+	public function getOrderItems()
+	{
+		/** @var ActiveQuery $rel */
+		$rel = $this->hasMany(Item::className(), ['id' => 'item_id']);
+		return $rel->viaTable('tbl_order_item', ['order_id' => 'id'], function($q) {
+			/** @var ActiveQuery $q */
+			$q->viaTable('tbl_order', ['customer_id' => 'id']);
+		})->orderBy('id');
 	}
 
 	public function afterSave($insert)
@@ -37,8 +61,9 @@ class Customer extends ActiveRecord
 		parent::afterSave($insert);
 	}
 
-	public static function createQuery()
+	public static function createQuery($config = [])
 	{
-		return new CustomerQuery(['modelClass' => get_called_class()]);
+		$config['modelClass'] = get_called_class();
+		return new CustomerQuery($config);
 	}
 }

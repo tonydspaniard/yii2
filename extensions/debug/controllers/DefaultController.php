@@ -39,7 +39,7 @@ class DefaultController extends Controller
 	public function actions()
 	{
 		$actions = [];
-		foreach($this->module->panels as $panel) {
+		foreach ($this->module->panels as $panel) {
 			$actions = array_merge($actions, $panel->actions);
 		}
 		return $actions;
@@ -50,7 +50,13 @@ class DefaultController extends Controller
 		$searchModel = new Debug();
 		$dataProvider = $searchModel->search($_GET, $this->getManifest());
 
+		// load latest request
+		$tags = array_keys($this->getManifest());
+		$tag = reset($tags);
+		$this->loadData($tag);
+
 		return $this->render('index', [
+			'panels' => $this->module->panels,
 			'dataProvider' => $dataProvider,
 			'searchModel' => $searchModel,
 		]);
@@ -87,9 +93,15 @@ class DefaultController extends Controller
 		]);
 	}
 
-	public function actionPhpinfo()
+	public function actionDownloadMail($file)
 	{
-		phpinfo();
+		$filePath = Yii::getAlias($this->module->panels['mail']->mailPath) . '/' . basename($file);
+
+		if ((mb_strpos($file, '\\') !== false || mb_strpos($file, '/') !== false) || !is_file($filePath)) {
+			throw new NotFoundHttpException('Mail file not found');
+		}
+
+		Yii::$app->response->sendFile($filePath);
 	}
 
 	private $_manifest;

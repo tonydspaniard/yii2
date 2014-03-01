@@ -14,7 +14,7 @@ $controllerClass = StringHelper::basename($generator->controllerClass);
 $modelClass = StringHelper::basename($generator->modelClass);
 $searchModelClass = StringHelper::basename($generator->searchModelClass);
 if ($modelClass === $searchModelClass) {
-	$searchModelAlias = $searchModelClass.'Search';
+	$searchModelAlias = $searchModelClass . 'Search';
 }
 
 /** @var ActiveRecordInterface $class */
@@ -31,7 +31,7 @@ namespace <?= StringHelper::dirname(ltrim($generator->controllerClass, '\\')) ?>
 
 use Yii;
 use <?= ltrim($generator->modelClass, '\\') ?>;
-use <?= ltrim($generator->searchModelClass, '\\') ?><?php if (isset($searchModelAlias)):?> as <?= $searchModelAlias ?><?php endif ?>;
+use <?= ltrim($generator->searchModelClass, '\\') . (isset($searchModelAlias) ? " as $searchModelAlias" : "") ?>;
 use <?= ltrim($generator->baseControllerClass, '\\') ?>;
 use yii\web\NotFoundHttpException;
 use yii\web\VerbFilter;
@@ -89,7 +89,7 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
 	{
 		$model = new <?= $modelClass ?>;
 
-		if ($model->load($_POST) && $model->save()) {
+		if ($model->load(Yii::$app->request->post()) && $model->save()) {
 			return $this->redirect(['view', <?= $urlParams ?>]);
 		} else {
 			return $this->render('create', [
@@ -108,7 +108,7 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
 	{
 		$model = $this->findModel(<?= $actionParams ?>);
 
-		if ($model->load($_POST) && $model->save()) {
+		if ($model->load(Yii::$app->request->post()) && $model->save()) {
 			return $this->redirect(['view', <?= $urlParams ?>]);
 		} else {
 			return $this->render('update', [

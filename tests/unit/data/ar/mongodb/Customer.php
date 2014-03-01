@@ -2,8 +2,6 @@
 
 namespace yiiunit\data\ar\mongodb;
 
-use yii\mongodb\ActiveQuery;
-
 class Customer extends ActiveRecord
 {
 	public static function collectionName()
@@ -27,8 +25,9 @@ class Customer extends ActiveRecord
 		return $this->hasMany(CustomerOrder::className(), ['customer_id' => '_id']);
 	}
 
-	public static function createQuery()
+	public static function createQuery($config = [])
 	{
-		return new CustomerQuery(['modelClass' => get_called_class()]);
+		$config['modelClass'] = get_called_class();
+		return new CustomerQuery($config);
 	}
 }

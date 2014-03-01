@@ -23,6 +23,7 @@ ArrayHelper::multisort($methods, 'name');
 	<div class="detailHeader h3" id="<?= $method->name . '()-detail' ?>">
 		<?= $method->name ?>()
 		<span class="detailHeaderTag small">
+			<?= $method->visibility ?>
 			method
 			<?php if (!empty($method->since)): ?>
 				(available since version <?php echo $method->since; ?>)
@@ -61,8 +62,8 @@ ArrayHelper::multisort($methods, 'name');
 
 <!--	--><?php //$this->renderPartial('sourceCode',array('object'=>$method)); ?>
 
-	<p><?= ApiMarkdown::process($method->shortDescription, $type, true) ?></strong></p>
-	<p><?= ApiMarkdown::process($method->description, $type) ?></p>
+	<p><strong><?= ApiMarkdown::process($method->shortDescription, $type, true) ?></strong></p>
+	<?= ApiMarkdown::process($method->description, $type) ?>
 
 	<?= $this->render('seeAlso', ['object' => $method]); ?>
 

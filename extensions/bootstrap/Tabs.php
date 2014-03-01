@@ -59,6 +59,7 @@ class Tabs extends Widget
 	 *
 	 * - label: string, required, the tab header label.
 	 * - headerOptions: array, optional, the HTML attributes of the tab header.
+	 * - linkOptions: array, optional, the HTML attributes of the tab header link tags.
 	 * - content: array, required if `items` is not set. The content (HTML) of the tab pane.
 	 * - options: array, optional, the HTML attributes of the tab pane container.
 	 * - active: boolean, optional, whether the item tab header and pane should be visible or not.
@@ -82,11 +83,16 @@ class Tabs extends Widget
 	 */
 	public $headerOptions = [];
 	/**
+	 * @var array list of HTML attributes for the tab header link tags. This will be overwritten
+	 * by the "linkOptions" set in individual [[items]].
+	 */
+	public $linkOptions = [];
+	/**
 	 * @var boolean whether the labels for header items should be HTML-encoded.
 	 */
 	public $encodeLabels = true;
 	/**
-	 * @var string, specifies the Bootstrap tab styling.
+	 * @var string specifies the Bootstrap tab styling.
 	 */
 	public $navType = 'nav-tabs';
 
@@ -118,12 +124,18 @@ class Tabs extends Widget
 	{
 		$headers = [];
 		$panes = [];
+
+		if (!$this->hasActiveTab() && !empty($this->items)) {
+			$this->items[0]['active'] = true;
+		}
+
 		foreach ($this->items as $n => $item) {
 			if (!isset($item['label'])) {
 				throw new InvalidConfigException("The 'label' option is required.");
 			}
 			$label = $this->encodeLabels ? Html::encode($item['label']) : $item['label'];
 			$headerOptions = array_merge($this->headerOptions, ArrayHelper::getValue($item, 'headerOptions', []));
+			$linkOptions = array_merge($this->linkOptions, ArrayHelper::getValue($item, 'linkOptions', []));
 
 			if (isset($item['items'])) {
 				$label .= ' <b class="caret"></b>';
@@ -133,7 +145,9 @@ class Tabs extends Widget
 					Html::addCssClass($headerOptions, 'active');
 				}
 
-				$header = Html::a($label, "#", ['class' => 'dropdown-toggle', 'data-toggle' => 'dropdown']) . "\n"
+				Html::addCssClass($linkOptions, 'dropdown-toggle');
+				$linkOptions['data-toggle'] = 'dropdown';
+				$header = Html::a($label, "#", $linkOptions) . "\n"
 					. Dropdown::widget(['items' => $item['items'], 'clientOptions' => false, 'view' => $this->getView()]);
 			} elseif (isset($item['content'])) {
 				$options = array_merge($this->itemOptions, ArrayHelper::getValue($item, 'options', []));
@@ -144,7 +158,8 @@ class Tabs extends Widget
 					Html::addCssClass($options, 'active');
 					Html::addCssClass($headerOptions, 'active');
 				}
-				$header = Html::a($label, '#' . $options['id'], ['data-toggle' => 'tab']);
+				$linkOptions['data-toggle'] = 'tab';
+				$header = Html::a($label, '#' . $options['id'], $linkOptions);
 				$panes[] = Html::tag('div', $item['content'], $options);
 			} else {
 				throw new InvalidConfigException("Either the 'content' or 'items' option must be set.");
@@ -154,7 +169,20 @@ class Tabs extends Widget
 		}
 
 		return Html::tag('ul', implode("\n", $headers), $this->options) . "\n"
-			. Html::tag('div', implode("\n", $panes), ['class' => 'tab-content']);
+		. Html::tag('div', implode("\n", $panes), ['class' => 'tab-content']);
+	}
+
+	/**
+	 * @return boolean if there's active tab defined
+	 */
+	protected function hasActiveTab()
+	{
+		foreach ($this->items as $item) {
+			if (isset($item['active']) && $item['active']===true) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

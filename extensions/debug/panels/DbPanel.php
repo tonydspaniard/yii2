@@ -15,6 +15,8 @@ use yii\debug\models\search\Db;
 /**
  * Debugger panel that collects and displays database queries performed.
  *
+ * @property array $profileLogs This property is read-only.
+ *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
@@ -54,7 +56,7 @@ class DbPanel extends Panel
 		$queryTime = number_format($this->getTotalQueryTime($timings) * 1000) . ' ms';
 
 		return Yii::$app->view->render('panels/db/summary', [
-			'timings' => $this->calculateTimings(), 
+			'timings' => $this->calculateTimings(),
 			'panel' => $this,
 			'queryCount' => $queryCount,
 			'queryTime' => $queryTime,
@@ -94,9 +96,18 @@ class DbPanel extends Panel
 	 */
 	public function save()
 	{
+		return ['messages' => $this->getProfileLogs()];
+	}
+
+	/**
+	 * Returns all profile logs of the current request for this panel. It includes categories such as:
+	 * 'yii\db\Command::query', 'yii\db\Command::execute'.
+	 * @return array
+	 */
+	public function getProfileLogs()
+	{
 		$target = $this->module->logTarget;
-		$messages = $target->filterMessages($target->messages, Logger::LEVEL_PROFILE, ['yii\db\Command::query', 'yii\db\Command::execute']);
-		return ['messages' => $messages];
+		return $target->filterMessages($target->messages, Logger::LEVEL_PROFILE, ['yii\db\Command::query', 'yii\db\Command::execute']);
 	}
 
 	/**
@@ -127,7 +138,7 @@ class DbPanel extends Panel
 			$this->_models = [];
 			$timings = $this->calculateTimings();
 
-			foreach($timings as $seq => $dbTiming) {
+			foreach ($timings as $seq => $dbTiming) {
 				$this->_models[] = 	[
 					'type' => $this->getQueryType($dbTiming['info']),
 					'query' => $dbTiming['info'],

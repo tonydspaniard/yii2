@@ -9,6 +9,7 @@ namespace yii\web;
 
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
 use yii\caching\Cache;
 
 /**
@@ -105,9 +106,9 @@ class UrlManager extends Component
 	 */
 	public $showScriptName = true;
 	/**
-	 * @var string the GET variable name for route. This property is used only if [[enablePrettyUrl]] is false.
+	 * @var string the GET parameter name for route. This property is used only if [[enablePrettyUrl]] is false.
 	 */
-	public $routeVar = 'r';
+	public $routeParam = 'r';
 	/**
 	 * @var Cache|string the cache object or the application component ID of the cache object.
 	 * Compiled URL rules will be cached through this cache object, if it is available.
@@ -156,17 +157,22 @@ class UrlManager extends Component
 		}
 
 		$rules = [];
+		$verbs = 'GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS';
 		foreach ($this->rules as $key => $rule) {
 			if (!is_array($rule)) {
 				$rule = ['route' => $rule];
-				if (preg_match('/^((?:(GET|HEAD|POST|PUT|PATCH|DELETE),)*(GET|HEAD|POST|PUT|PATCH|DELETE))\s+(.*)$/', $key, $matches)) {
+				if (preg_match("/^((?:($verbs),)*($verbs))\\s+(.*)$/", $key, $matches)) {
 					$rule['verb'] = explode(',', $matches[1]);
 					$rule['mode'] = UrlRule::PARSING_ONLY;
 					$key = $matches[4];
 				}
 				$rule['pattern'] = $key;
 			}
-			$rules[] = Yii::createObject(array_merge($this->ruleConfig, $rule));
+			$rule = Yii::createObject(array_merge($this->ruleConfig, $rule));
+			if (!$rule instanceof UrlRuleInterface) {
+				throw new InvalidConfigException('URL rule class must implement UrlRuleInterface.');
+			}
+			$rules[] = $rule;
 		}
 		$this->rules = $rules;
 
@@ -188,7 +194,6 @@ class UrlManager extends Component
 			/** @var UrlRule $rule */
 			foreach ($this->rules as $rule) {
 				if (($result = $rule->parseRequest($this, $request)) !== false) {
-					Yii::trace("Request parsed with URL rule: {$rule->name}", __METHOD__);
 					return $result;
 				}
 			}
@@ -217,7 +222,7 @@ class UrlManager extends Component
 			return [$pathInfo, []];
 		} else {
 			Yii::trace('Pretty URL not enabled. Using default URL parsing logic.', __METHOD__);
-			$route = $request->getQueryParam($this->routeVar, '');
+			$route = $request->getQueryParam($this->routeParam, '');
 			if (is_array($route)) {
 				$route = '';
 			}
@@ -228,23 +233,24 @@ class UrlManager extends Component
 	/**
 	 * Creates a URL using the given route and parameters.
 	 * The URL created is a relative one. Use [[createAbsoluteUrl()]] to create an absolute URL.
-	 * @param string $route the route
-	 * @param array $params the parameters (name-value pairs)
+	 * @param string|array $params route as a string or route and parameters in form of ['route', 'param1' => 'value1', 'param2' => 'value2']
 	 * @return string the created URL
 	 */
-	public function createUrl($route, $params = [])
+	public function createUrl($params)
 	{
+		$params = (array)$params;
 		$anchor = isset($params['#']) ? '#' . $params['#'] : '';
-		unset($params['#'], $params[$this->routeVar]);
+		unset($params['#'], $params[$this->routeParam]);
 
-		$route = trim($route, '/');
+		$route = trim($params[0], '/');
+		unset($params[0]);
 		$baseUrl = $this->getBaseUrl();
 
 		if ($this->enablePrettyUrl) {
 			/** @var UrlRule $rule */
 			foreach ($this->rules as $rule) {
 				if (($url = $rule->createUrl($this, $route, $params)) !== false) {
-					if ($rule->host !== null) {
+					if (strpos($url, '://') !== false) {
 						if ($baseUrl !== '' && ($pos = strpos($url, '/', 8)) !== false) {
 							return substr($url, 0, $pos) . $baseUrl . substr($url, $pos);
 						} else {
@@ -264,7 +270,7 @@ class UrlManager extends Component
 			}
 			return "$baseUrl/{$route}{$anchor}";
 		} else {
-			$url = "$baseUrl?{$this->routeVar}=$route";
+			$url = "$baseUrl?{$this->routeParam}=$route";
 			if (!empty($params)) {
 				$url .= '&' . http_build_query($params);
 			}
@@ -275,16 +281,16 @@ class UrlManager extends Component
 	/**
 	 * Creates an absolute URL using the given route and parameters.
 	 * This method prepends the URL created by [[createUrl()]] with the [[hostInfo]].
-	 * @param string $route the route
-	 * @param array $params the parameters (name-value pairs)
+	 * @param string|array $params route as a string or route and parameters in form of ['route', 'param1' => 'value1', 'param2' => 'value2']
 	 * @param string $schema the schema to use for the url. e.g. 'http' or 'https'. If not specified
 	 * the schema of the current request will be used.
 	 * @return string the created URL
 	 * @see createUrl()
 	 */
-	public function createAbsoluteUrl($route, $params = [], $schema = null)
+	public function createAbsoluteUrl($params, $schema = null)
 	{
-		$url = $this->createUrl($route, $params);
+		$params = (array)$params;
+		$url = $this->createUrl($params);
 		if (strpos($url, '://') === false) {
 			$url = $this->getHostInfo($schema) . $url;
 		}

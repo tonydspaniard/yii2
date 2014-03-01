@@ -2,7 +2,6 @@
 
 namespace yiiunit\data\ar\redis;
 
-use yii\redis\ActiveQuery;
 use yiiunit\extensions\redis\ActiveRecordTest;
 
 class Customer extends ActiveRecord
@@ -14,11 +13,11 @@ class Customer extends ActiveRecord
 
 	public function attributes()
 	{
-		return ['id', 'email', 'name', 'address', 'status'];
+		return ['id', 'email', 'name', 'address', 'status', 'profile_id'];
 	}
 
 	/**
-	 * @return \yii\redis\ActiveRelation
+	 * @return \yii\redis\ActiveQuery
 	 */
 	public function getOrders()
 	{
@@ -32,8 +31,9 @@ class Customer extends ActiveRecord
 		parent::afterSave($insert);
 	}
 
-	public static function createQuery()
+	public static function createQuery($config = [])
 	{
-		return new CustomerQuery(['modelClass' => get_called_class()]);
+		$config['modelClass'] = get_called_class();
+		return new CustomerQuery($config);
 	}
 }

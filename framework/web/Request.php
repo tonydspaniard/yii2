@@ -57,7 +57,6 @@ use yii\helpers\StringHelper;
  * @property string $pathInfo Part of the request URL that is after the entry script and before the question
  * mark. Note, the returned path info is already URL-decoded.
  * @property integer $port Port number for insecure requests.
- * @property array $postParams The request POST parameter values.
  * @property array $queryParams The request GET parameter values.
  * @property string $queryString Part of the request URL that is after the question mark. This property is
  * read-only.
@@ -95,10 +94,10 @@ class Request extends \yii\base\Request
 	 * from the same application. If not, a 400 HTTP exception will be raised.
 	 *
 	 * Note, this feature requires that the user client accepts cookie. Also, to use this feature,
-	 * forms submitted via POST method must contain a hidden input whose name is specified by [[csrfVar]].
+	 * forms submitted via POST method must contain a hidden input whose name is specified by [[csrfParam]].
 	 * You may use [[\yii\web\Html::beginForm()]] to generate his hidden input.
 	 *
-	 * In JavaScript, you may get the values of [[csrfVar]] and [[csrfToken]] via `yii.getCsrfVar()` and
+	 * In JavaScript, you may get the values of [[csrfParam]] and [[csrfToken]] via `yii.getCsrfParam()` and
 	 * `yii.getCsrfToken()`, respectively. The [[\yii\web\YiiAsset]] asset must be registered.
 	 *
 	 * @see Controller::enableCsrfValidation
@@ -109,7 +108,7 @@ class Request extends \yii\base\Request
 	 * @var string the name of the token used to prevent CSRF. Defaults to '_csrf'.
 	 * This property is used only when [[enableCsrfValidation]] is true.
 	 */
-	public $csrfVar = '_csrf';
+	public $csrfParam = '_csrf';
 	/**
 	 * @var array the configuration of the CSRF cookie. This property is used only when [[enableCsrfValidation]] is true.
 	 * @see Cookie
@@ -125,7 +124,7 @@ class Request extends \yii\base\Request
 	 * @see getMethod()
 	 * @see getBodyParams()
 	 */
-	public $methodVar = '_method';
+	public $methodParam = '_method';
 	/**
 	 * @var array the parsers for converting the raw HTTP request body into [[bodyParams]].
 	 * The array keys are the request `Content-Types`, and the array values are the
@@ -147,12 +146,15 @@ class Request extends \yii\base\Request
 	 */
 	public $parsers = [];
 
+	/**
+	 * @var CookieCollection Collection of request cookies.
+	 */
 	private $_cookies;
-
 	/**
 	 * @var array the headers in this collection (indexed by the header names)
 	 */
 	private $_headers;
+
 
 	/**
 	 * Resolves the current request into a route and the associated parameters.
@@ -208,8 +210,8 @@ class Request extends \yii\base\Request
 	 */
 	public function getMethod()
 	{
-		if (isset($_POST[$this->methodVar])) {
-			return strtoupper($_POST[$this->methodVar]);
+		if (isset($_POST[$this->methodParam])) {
+			return strtoupper($_POST[$this->methodParam]);
 		} elseif (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
 			return strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
 		} else {
@@ -290,6 +292,15 @@ class Request extends \yii\base\Request
 	}
 
 	/**
+	 * Returns whether this is a PJAX request
+	 * @return boolean whether this is a PJAX request
+	 */
+	public function getIsPjax ()
+	{
+		return $this->getIsAjax() && !empty($_SERVER['HTTP_X_PJAX']);
+	}
+	
+	/**
 	 * Returns whether this is an Adobe Flash or Flex request.
 	 * @return boolean whether this is an Adobe Flash or Adobe Flex request.
 	 */
@@ -331,9 +342,9 @@ class Request extends \yii\base\Request
 	{
 		if ($this->_bodyParams === null) {
 			$contentType = $this->getContentType();
-			if (isset($_POST[$this->methodVar])) {
+			if (isset($_POST[$this->methodParam])) {
 				$this->_bodyParams = $_POST;
-				unset($this->_bodyParams[$this->methodVar]);
+				unset($this->_bodyParams[$this->methodParam]);
 			} elseif (isset($this->parsers[$contentType])) {
 				$parser = Yii::createObject($this->parsers[$contentType]);
 				if (!($parser instanceof RequestParserInterface)) {
@@ -545,7 +556,7 @@ class Request extends \yii\base\Request
 				$this->_scriptUrl = $_SERVER['ORIG_SCRIPT_NAME'];
 			} elseif (($pos = strpos($_SERVER['PHP_SELF'], '/' . $scriptName)) !== false) {
 				$this->_scriptUrl = substr($_SERVER['SCRIPT_NAME'], 0, $pos) . '/' . $scriptName;
-			} elseif (isset($_SERVER['DOCUMENT_ROOT']) && strpos($scriptFile, $_SERVER['DOCUMENT_ROOT']) === 0) {
+			} elseif (!empty($_SERVER['DOCUMENT_ROOT']) && strpos($scriptFile, $_SERVER['DOCUMENT_ROOT']) === 0) {
 				$this->_scriptUrl = str_replace('\\', '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $scriptFile));
 			} else {
 				throw new InvalidConfigException('Unable to determine the entry script URL.');
@@ -808,6 +819,22 @@ class Request extends \yii\base\Request
 		return isset($_SERVER['REMOTE_HOST']) ? $_SERVER['REMOTE_HOST'] : null;
 	}
 
+	/**
+	 * @return string the username sent via HTTP authentication, null if the username is not given
+	 */
+	public function getAuthUser()
+	{
+		return isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : null;
+	}
+
+	/**
+	 * @return string the password sent via HTTP authentication, null if the username is not given
+	 */
+	public function getAuthPassword()
+	{
+		return isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : null;
+	}
+
 	private $_port;
 
 	/**
@@ -874,9 +901,23 @@ class Request extends \yii\base\Request
 
 	/**
 	 * Returns the content types acceptable by the end user.
-	 * This is determined by the `Accept` HTTP header.
-	 * @return array the content types ordered by the preference level. The first element
-	 * represents the most preferred content type.
+	 * This is determined by the `Accept` HTTP header. For example,
+	 *
+	 * ```php
+	 * $_SERVER['HTTP_ACCEPT'] = 'text/plain; q=0.5, application/json; version=1.0, application/xml; version=2.0;';
+	 * $types = $request->getAcceptableContentTypes();
+	 * print_r($types);
+	 * // displays:
+	 * // [
+	 * //     'application/json' => ['q' => 1, 'version' => '1.0'],
+	 * //      'application/xml' => ['q' => 1, 'version' => '2.0'],
+	 * //           'text/plain' => ['q' => 0.5],
+	 * // ]
+	 * ```
+	 *
+	 * @return array the content types ordered by the quality score. Types with the highest scores
+	 * will be returned first. The array keys are the content types, while the array values
+	 * are the corresponding quality score and other parameters as given in the header.
 	 */
 	public function getAcceptableContentTypes()
 	{
@@ -891,8 +932,12 @@ class Request extends \yii\base\Request
 	}
 
 	/**
+	 * Sets the acceptable content types.
+	 * Please refer to [[getAcceptableContentTypes()]] on the format of the parameter.
 	 * @param array $value the content types that are acceptable by the end user. They should
 	 * be ordered by the preference level.
+	 * @see getAcceptableContentTypes()
+	 * @see parseAcceptHeader()
 	 */
 	public function setAcceptableContentTypes($value)
 	{
@@ -926,7 +971,7 @@ class Request extends \yii\base\Request
 	{
 		if ($this->_languages === null) {
 			if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-				$this->_languages = $this->parseAcceptHeader($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+				$this->_languages = array_keys($this->parseAcceptHeader($_SERVER['HTTP_ACCEPT_LANGUAGE']));
 			} else {
 				$this->_languages = [];
 			}
@@ -945,45 +990,86 @@ class Request extends \yii\base\Request
 
 	/**
 	 * Parses the given `Accept` (or `Accept-Language`) header.
-	 * This method will return the acceptable values ordered by their preference level.
+	 *
+	 * This method will return the acceptable values with their quality scores and the corresponding parameters
+	 * as specified in the given `Accept` header. The array keys of the return value are the acceptable values,
+	 * while the array values consisting of the corresponding quality scores and parameters. The acceptable
+	 * values with the highest quality scores will be returned first. For example,
+	 *
+	 * ```php
+	 * $header = 'text/plain; q=0.5, application/json; version=1.0, application/xml; version=2.0;';
+	 * $accepts = $request->parseAcceptHeader($header);
+	 * print_r($accepts);
+	 * // displays:
+	 * // [
+	 * //     'application/json' => ['q' => 1, 'version' => '1.0'],
+	 * //      'application/xml' => ['q' => 1, 'version' => '2.0'],
+	 * //           'text/plain' => ['q' => 0.5],
+	 * // ]
+	 * ```
+	 *
 	 * @param string $header the header to be parsed
-	 * @return array the accept values ordered by their preference level.
+	 * @return array the acceptable values ordered by their quality score. The values with the highest scores
+	 * will be returned first.
 	 */
-	protected function parseAcceptHeader($header)
+	public function parseAcceptHeader($header)
 	{
 		$accepts = [];
-		$n = preg_match_all('/\s*([\w\/\-\*]+)\s*(?:;\s*q\s*=\s*([\d\.]+))?[^,]*/', $header, $matches, PREG_SET_ORDER);
-		for ($i = 0; $i < $n; ++$i) {
-			if (!empty($matches[$i][1])) {
-				$accepts[] = [$matches[$i][1], isset($matches[$i][2]) ? (float)$matches[$i][2] : 1, $i];
+		foreach (explode(',', $header) as $i => $part) {
+			$params = preg_split('/\s*;\s*/', trim($part), -1, PREG_SPLIT_NO_EMPTY);
+			if (empty($params)) {
+				continue;
 			}
+			$values = [
+				'q' => [$i, array_shift($params), 1],
+			];
+			foreach ($params as $param) {
+				if (strpos($param, '=') !== false) {
+					list ($key, $value) = explode('=', $param, 2);
+					if ($key === 'q') {
+						$values['q'][2] = (double)$value;
+					} else {
+						$values[$key] = $value;
+					}
+				} else {
+					$values[] = $param;
+				}
+			}
+			$accepts[] = $values;
 		}
+
 		usort($accepts, function ($a, $b) {
-			if ($a[1] > $b[1]) {
+			$a = $a['q']; // index, name, q
+			$b = $b['q'];
+			if ($a[2] > $b[2]) {
 				return -1;
-			} elseif ($a[1] < $b[1]) {
+			} elseif ($a[2] < $b[2]) {
 				return 1;
-			} elseif ($a[0] === $b[0]) {
-				return $a[2] > $b[2] ? 1 : -1;
-			} elseif ($a[0] === '*/*') {
+			} elseif ($a[1] === $b[1]) {
+				return $a[0] > $b[0] ? 1 : -1;
+			} elseif ($a[1] === '*/*') {
 				return 1;
-			} elseif ($b[0] === '*/*') {
+			} elseif ($b[1] === '*/*') {
 				return -1;
 			} else {
-				$wa = $a[0][strlen($a[0]) - 1] === '*';
-				$wb = $b[0][strlen($b[0]) - 1] === '*';
+				$wa = $a[1][strlen($a[1]) - 1] === '*';
+				$wb = $b[1][strlen($b[1]) - 1] === '*';
 				if ($wa xor $wb) {
 					return $wa ? 1 : -1;
 				} else {
-					return $a[2] > $b[2] ? 1 : -1;
+					return $a[0] > $b[0] ? 1 : -1;
 				}
 			}
 		});
+
 		$result = [];
 		foreach ($accepts as $accept) {
-			$result[] = $accept[0];
+			$name = $accept['q'][1];
+			$accept['q'] = $accept['q'][2];
+			$result[$name] = $accept;
 		}
-		return array_unique($result);
+
+		return $result;
 	}
 
 	/**
@@ -1103,7 +1189,7 @@ class Request extends \yii\base\Request
 	public function getRawCsrfToken()
 	{
 		if ($this->_csrfCookie === null) {
-			$this->_csrfCookie = $this->getCookies()->get($this->csrfVar);
+			$this->_csrfCookie = $this->getCookies()->get($this->csrfParam);
 			if ($this->_csrfCookie === null) {
 				$this->_csrfCookie = $this->createCsrfCookie();
 				Yii::$app->getResponse()->getCookies()->add($this->_csrfCookie);
@@ -1175,7 +1261,7 @@ class Request extends \yii\base\Request
 	protected function createCsrfCookie()
 	{
 		$options = $this->csrfCookie;
-		$options['name'] = $this->csrfVar;
+		$options['name'] = $this->csrfParam;
 		$options['value'] = Security::generateRandomKey();
 		return new Cookie($options);
 	}
@@ -1194,8 +1280,8 @@ class Request extends \yii\base\Request
 		if (!$this->enableCsrfValidation || in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
 			return true;
 		}
-		$trueToken = $this->getCookies()->getValue($this->csrfVar);
-		$token = $this->getBodyParam($this->csrfVar);
+		$trueToken = $this->getCookies()->getValue($this->csrfParam);
+		$token = $this->getBodyParam($this->csrfParam);
 		return $this->validateCsrfTokenInternal($token, $trueToken)
 			|| $this->validateCsrfTokenInternal($this->getCsrfTokenFromHeader(), $trueToken);
 	}

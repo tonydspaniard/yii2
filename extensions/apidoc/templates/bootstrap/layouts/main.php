@@ -1,16 +1,24 @@
 <?php
-use yii\apidoc\templates\bootstrap\SideNavWidget;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
 use yii\helpers\Html;
-use yii\helpers\StringHelper;
-use yii\widgets\Menu;
 
 /**
  * @var yii\web\View $this
  */
 
 \yii\apidoc\templates\bootstrap\assets\AssetBundle::register($this);
+
+// Navbar hides initial content when jumping to in-page anchor
+// https://github.com/twbs/bootstrap/issues/1768
+$this->registerJs(<<<JS
+	var shiftWindow = function() { scrollBy(0, -50) };
+	if (location.hash) shiftWindow();
+	window.addEventListener("hashchange", shiftWindow);
+JS
+,
+	\yii\web\View::POS_HEAD
+);
 
 $this->beginPage();
 ?>
@@ -34,7 +42,7 @@ $this->beginPage();
 		'options' => [
 			'class' => 'navbar-inverse navbar-fixed-top',
 		],
-		'padded' => false,
+		'renderInnerContainer' => false,
 		'view' => $this,
 	]);
 	$extItems = [];

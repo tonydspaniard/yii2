@@ -6,7 +6,6 @@
  */
 
 namespace yii\db;
-use yii\base\InvalidCallException;
 
 /**
  * ActiveQueryTrait implements the common methods and properties for active record query classes.
@@ -170,7 +169,7 @@ trait ActiveQueryTrait
 	/**
 	 * @param ActiveRecord $model
 	 * @param array $with
-	 * @return ActiveRelationInterface[]
+	 * @return ActiveQueryInterface[]
 	 */
 	private function normalizeRelations($model, $with)
 	{

@@ -7,6 +7,7 @@
 
 namespace yii\redis;
 
+use yii\base\InvalidParamException;
 use yii\base\NotSupportedException;
 use yii\db\Exception;
 use yii\db\Expression;
@@ -336,7 +337,7 @@ EOF;
 		}
 		$columnAlias = $this->addColumn($column, $columns);
 		$parts = [];
-		foreach ($values as $i => $value) {
+		foreach ($values as $value) {
 			if (is_array($value)) {
 				$value = isset($value[$column]) ? $value[$column] : null;
 			}

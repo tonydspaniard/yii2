@@ -12,6 +12,8 @@ use yii\base\InvalidParamException;
 /**
  * QueryBuilder is the query builder for Oracle databases.
  *
+ * @author Qiang Xue <qiang.xue@gmail.com>
+ * @since 2.0
  */
 class QueryBuilder extends \yii\db\QueryBuilder
 {
@@ -22,8 +24,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
 	{
 		$params = $query->params;
 		$clauses = [
-			$this->buildSelect($query->select, $query->distinct, $query->selectOption),
-			$this->buildFrom($query->from),
+			$this->buildSelect($query->select, $params, $query->distinct, $query->selectOption),
+			$this->buildFrom($query->from, $params),
 			$this->buildJoin($query->join, $params),
 			$this->buildWhere($query->where, $params),
 			$this->buildGroupBy($query->groupBy),

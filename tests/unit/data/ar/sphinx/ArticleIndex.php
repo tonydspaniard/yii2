@@ -1,8 +1,6 @@
 <?php
 namespace yiiunit\data\ar\sphinx;
 
-use yii\sphinx\ActiveQuery;
-
 class ArticleIndex extends ActiveRecord
 {
 	public $custom_column;
@@ -27,8 +25,9 @@ class ArticleIndex extends ActiveRecord
 		return $this->source->content;
 	}
 
-	public static function createQuery()
+	public static function createQuery($config = [])
 	{
-		return new ArticleIndexQuery(['modelClass' => get_called_class()]);
+		$config['modelClass'] = get_called_class();
+		return new ArticleIndexQuery($config);
 	}
 }

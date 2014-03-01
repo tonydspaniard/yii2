@@ -154,11 +154,12 @@ trait ActiveRecordTestTrait
 		// asArray
 		$customer = $this->callCustomerFind()->where(['id' => 2])->asArray()->one();
 		$this->assertEquals([
-			'id' => '2',
+			'id' => 2,
 			'email' => 'user2@example.com',
 			'name' => 'user2',
 			'address' => 'address2',
-			'status' => '1',
+			'status' => 1,
+			'profile_id' => null,
 		], $customer);
 	}
 
@@ -206,7 +207,6 @@ trait ActiveRecordTestTrait
 
 	public function testfindIndexByAsArray()
 	{
-		$customerClass = $this->getCustomerClass();
 		/** @var TestCase|ActiveRecordTestTrait $this */
 		// indexBy + asArray
 		$customers = $this->callCustomerFind()->asArray()->indexBy('name')->all();
@@ -493,7 +493,7 @@ trait ActiveRecordTestTrait
 	}
 
 	/**
-	 * Ensure ActiveRelation does preserve order of items on find via()
+	 * Ensure ActiveRelationTrait does preserve order of items on find via()
 	 * https://github.com/yiisoft/yii2/issues/1310
 	 */
 	public function testFindEagerViaRelationPreserveOrder()

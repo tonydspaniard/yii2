@@ -9,7 +9,6 @@ namespace yii\sphinx;
 
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
-use yii\db\ActiveRelationInterface;
 use yii\db\BaseActiveRecord;
 use yii\db\StaleObjectException;
 use yii\helpers\Inflector;
@@ -135,14 +134,31 @@ abstract class ActiveRecord extends BaseActiveRecord
 
 	/**
 	 * Creates an [[ActiveQuery]] instance.
-	 * This method is called by [[find()]], [[findBySql()]] and [[count()]] to start a SELECT query.
-	 * You may override this method to return a customized query (e.g. `ArticleQuery` specified
-	 * written for querying `Article` purpose.)
+	 *
+	 * This method is called by [[find()]], [[findBySql()]] to start a SELECT query but also
+	 * by [[hasOne()]] and [[hasMany()]] to create a relational query.
+	 * You may override this method to return a customized query (e.g. `CustomerQuery` specified
+	 * written for querying `Customer` purpose.)
+	 *
+	 * You may also define default conditions that should apply to all queries unless overridden:
+	 *
+	 * ```php
+	 * public static function createQuery($config = [])
+	 * {
+	 *     return parent::createQuery($config)->where(['deleted' => false]);
+	 * }
+	 * ```
+	 *
+	 * Note that all queries should use [[Query::andWhere()]] and [[Query::orWhere()]] to keep the
+	 * default condition. Using [[Query::where()]] will override the default condition.
+	 *
+	 * @param array $config the configuration passed to the ActiveQuery class.
 	 * @return ActiveQuery the newly created [[ActiveQuery]] instance.
 	 */
-	public static function createQuery()
+	public static function createQuery($config = [])
 	{
-		return new ActiveQuery(['modelClass' => get_called_class()]);
+		$config['modelClass'] = get_called_class();
+		return new ActiveQuery($config);
 	}
 
 	/**
@@ -304,18 +320,6 @@ abstract class ActiveRecord extends BaseActiveRecord
 	}
 
 	/**
-	 * Creates an [[ActiveRelationInterface]] instance.
-	 * This method is called by [[hasOne()]] and [[hasMany()]] to create a relation instance.
-	 * You may override this method to return a customized relation.
-	 * @param array $config the configuration passed to the ActiveRelation class.
-	 * @return ActiveRelationInterface the newly created [[ActiveRelation]] instance.
-	 */
-	public static function createRelation($config = [])
-	{
-		return new ActiveRelation($config);
-	}
-
-	/**
 	 * Returns the list of all attribute names of the model.
 	 * The default implementation will return all column names of the table associated with this AR class.
 	 * @return array list of attribute names.
@@ -372,12 +376,12 @@ abstract class ActiveRecord extends BaseActiveRecord
 			try {
 				$result = $this->insertInternal($attributes);
 				if ($result === false) {
-					$transaction->rollback();
+					$transaction->rollBack();
 				} else {
 					$transaction->commit();
 				}
 			} catch (\Exception $e) {
-				$transaction->rollback();
+				$transaction->rollBack();
 				throw $e;
 			}
 		} else {
@@ -473,12 +477,12 @@ abstract class ActiveRecord extends BaseActiveRecord
 			try {
 				$result = $this->updateInternal($attributes);
 				if ($result === false) {
-					$transaction->rollback();
+					$transaction->rollBack();
 				} else {
 					$transaction->commit();
 				}
 			} catch (\Exception $e) {
-				$transaction->rollback();
+				$transaction->rollBack();
 				throw $e;
 			}
 		} else {
@@ -589,14 +593,14 @@ abstract class ActiveRecord extends BaseActiveRecord
 			}
 			if ($transaction !== null) {
 				if ($result === false) {
-					$transaction->rollback();
+					$transaction->rollBack();
 				} else {
 					$transaction->commit();
 				}
 			}
 		} catch (\Exception $e) {
 			if ($transaction !== null) {
-				$transaction->rollback();
+				$transaction->rollBack();
 			}
 			throw $e;
 		}

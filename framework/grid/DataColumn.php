@@ -47,7 +47,7 @@ class DataColumn extends Column
 	 */
 	public $value;
 	/**
-	 * @var string|array in which format should the value of each data model be displayed as (e.g. "text", "html",
+	 * @var string|array in which format should the value of each data model be displayed as (e.g. "raw", "text", "html",
 	 * ['date', 'Y-m-d']). Supported formats are determined by the [[GridView::formatter|formatter]] used by
 	 * the [[GridView]]. Default format is "text" which will format the value as an HTML-encoded plain text when
 	 * [[\yii\base\Formatter::format()]] or [[\yii\i18n\Formatter::format()]] is used.
@@ -138,7 +138,7 @@ class DataColumn extends Column
 	/**
 	 * @inheritdoc
 	 */
-	protected function renderDataCellContent($model, $key, $index)
+	protected function getDataCellContent($model, $key, $index)
 	{
 		if ($this->value !== null) {
 			if (is_string($this->value)) {
@@ -149,8 +149,16 @@ class DataColumn extends Column
 		} elseif ($this->content === null && $this->attribute !== null) {
 			$value = ArrayHelper::getValue($model, $this->attribute);
 		} else {
-			return parent::renderDataCellContent($model, $key, $index);
+			return parent::getDataCellContent($model, $key, $index);
 		}
-		return $this->grid->formatter->format($value, $this->format);
+		return $value;
+	}	 
+
+	/**
+	 * @inheritdoc
+	 */
+	protected function renderDataCellContent($model, $key, $index)
+	{
+		return $this->grid->formatter->format($this->getDataCellContent($model, $key, $index), $this->format);
 	}
 }

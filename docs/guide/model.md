@@ -9,7 +9,7 @@ Yii models have the following basic features:
 - Massive attribute assignment: the ability to populate multiple model attributes in one step.
 - Scenario-based data validation.
 
-Models in Yii extend from the [[\yii\base\Model]] class. Models are typically used to both hold data and define
+Models in Yii extend from the [[yii\base\Model]] class. Models are typically used to both hold data and define
 the validation rules for that data (aka, the business logic). The business logic greatly simplifies the generation
 of models from complex web forms by providing validation and error reporting.
 
@@ -24,25 +24,25 @@ be accessed like the member variables of any object. For example, a `Post` model
 may contain a `title` attribute and a `content` attribute, accessible as follows:
 
 ```php
-$post = new Post;
+$post = new Post();
 $post->title = 'Hello, world';
 $post->content = 'Something interesting is happening.';
 echo $post->title;
 echo $post->content;
 ```
 
-Since [[\yii\base\Model|Model]] implements the [ArrayAccess](http://php.net/manual/en/class.arrayaccess.php) interface,
+Since [[yii\base\Model|Model]] implements the [ArrayAccess](http://php.net/manual/en/class.arrayaccess.php) interface,
 you can also access the attributes as if they were array elements:
 
 ```php
-$post = new Post;
+$post = new Post();
 $post['title'] = 'Hello, world';
 $post['content'] = 'Something interesting is happening';
 echo $post['title'];
 echo $post['content'];
 ```
 
-By default, [[\yii\base\Model|Model]] requires that attributes be declared as *public* and *non-static*
+By default, [[yii\base\Model|Model]] requires that attributes be declared as *public* and *non-static*
 class member variables. In the following example, the `LoginForm` model class declares two attributes:
 `username` and `password`.
 
@@ -55,8 +55,8 @@ class LoginForm extends \yii\base\Model
 }
 ```
 
-Derived model classes may declare attributes in different ways, by overriding the [[\yii\base\Model::attributes()|attributes()]]
-method. For example, [[\yii\db\ActiveRecord]] defines attributes using the column names of the database table
+Derived model classes may declare attributes in different ways, by overriding the [[yii\base\Model::attributes()|attributes()]]
+method. For example, [[yii\db\ActiveRecord]] defines attributes using the column names of the database table
 that is associated with the class.
 
 
@@ -65,12 +65,12 @@ Attribute Labels
 
 Attribute labels are mainly used for display purpose. For example, given an attribute `firstName`, we can declare
 a label `First Name` that is more user-friendly when displayed to end users in places such as form labels and
-error messages. Given an attribute name, you can obtain its label by calling [[\yii\base\Model::getAttributeLabel()]].
+error messages. Given an attribute name, you can obtain its label by calling [[yii\base\Model::getAttributeLabel()]].
 
-To declare attribute labels, override the [[\yii\base\Model::attributeLabels()]] method. The overridden method returns
+To declare attribute labels, override the [[yii\base\Model::attributeLabels()]] method. The overridden method returns
 a mapping of attribute names to attribute labels, as shown in the example below. If an attribute is not found
-in this mapping, its label will be generated using the [[\yii\base\Model::generateAttributeLabel()]] method.
-In many cases, [[\yii\base\Model::generateAttributeLabel()]] will generate reasonable labels (e.g. `username` to `Username`,
+in this mapping, its label will be generated using the [[yii\base\Model::generateAttributeLabel()]] method.
+In many cases, [[yii\base\Model::generateAttributeLabel()]] will generate reasonable labels (e.g. `username` to `Username`,
 `orderNumber` to `Order Number`).
 
 ```php
@@ -160,7 +160,7 @@ class EmployeeController extends \yii\web\Controller
 		$employee = new Employee(['scenario' => 'managementPanel']);
 
 		// second way
-		$employee = new Employee;
+		$employee = new Employee();
 		$employee->scenario = 'managementPanel';
 
 		// third way
@@ -187,7 +187,7 @@ only, etc. If errors are found in validation, they may be presented to the user 
 The following example shows how the validation is performed:
 
 ```php
-$model = new LoginForm;
+$model = new LoginForm();
 $model->username = $_POST['username'];
 $model->password = $_POST['password'];
 if ($model->validate()) {
@@ -200,7 +200,7 @@ if ($model->validate()) {
 
 The possible validation rules for a model should be listed in its `rules()` method. Each validation rule applies to one
 or several attributes and is effective in one or several scenarios. A rule can be specified using a validator object - an
-instance of a [[\yii\validators\Validator]] child class, or an array with the following format:
+instance of a [[yii\validators\Validator]] child class, or an array with the following format:
 
 ```php
 [
@@ -221,6 +221,42 @@ When `validate()` is called, the actual validation rules executed are determined
 
 - the rule must be associated with at least one active attribute;
 - the rule must be active for the current scenario.
+
+
+### Creating your own validators (Inline validators)
+
+If none of the built in validators fit your needs, you can create your own validator by creating a method in you model class.
+This method will be wrapped by an [[InlineValidator|yii\validators\InlineValidator]] an be called upon validation.
+You will do the validation of the attribute and [[add errors|yii\base\Model::addError()]] to the model when validation fails.
+
+The method has the following signature `public function myValidator($attribute, $params)` while you are free to choose the name.
+
+Here is an example implementation of a validator validating the age of a user:
+
+```php
+public function validateAge($attribute, $params)
+{
+	$value = $this->$attribute;
+	if (strtotime($value) > strtotime('now - ' . $params['min'] . ' years')) {
+		$this->addError($attribute, 'You must be at least ' . $params['min'] . ' years old to register for this service.');
+	}
+}
+
+public function rules()
+{
+	return [
+		// ...
+		[['birthdate'], 'validateAge', 'params' => ['min' => '12']],
+	];
+}
+```
+
+You may also set other properties of the [[InlineValidator|yii\validators\InlineValidator]] in the rules definition,
+for example the [[skipOnEmpty|yii\validators\InlineValidator::skipOnEmpty]] property:
+
+```php
+[['birthdate'], 'validateAge', 'params' => ['min' => '12'], 'skipOnEmpty' => false],
+```
 
 
 Massive Attribute Retrieval and Assignment
@@ -295,7 +331,7 @@ For the code above mass assignment will be allowed stsrictly according to `scena
 $user = User::find(42);
 $data = ['password' => '123'];
 $user->attributes = $data;
-print_r($data);
+print_r($user->attributes);
 ```
 
 Will give you empty array because there's no default scenario defined in our `scenarios()`.
@@ -309,7 +345,7 @@ $data = [
 	'hashcode' => 'test',
 ];
 $user->attributes = $data;
-print_r($data);
+print_r($user->attributes);
 ```
 
 Will give you the following:
@@ -350,7 +386,7 @@ $data = [
 	'password' => '123',
 ];
 $user->attributes = $data;
-print_r($data);
+print_r($user->attributes);
 ```
 
 Will give you the following:
@@ -413,4 +449,4 @@ See also
 --------
 
 - [Model validation reference](validation.md)
-- [[\yii\base\Model]]
+- [[yii\base\Model]]

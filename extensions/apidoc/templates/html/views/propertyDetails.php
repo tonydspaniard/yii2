@@ -23,9 +23,10 @@ ArrayHelper::multisort($properties, 'name');
 	<div class="detailHeader h3" id="<?= $property->name.'-detail' ?>">
 		<?php echo $property->name; ?>
 		<span class="detailHeaderTag small">
-			property
+			<?= $property->visibility ?>
 			<?php if($property->getIsReadOnly()) echo ' <em>read-only</em> '; ?>
 			<?php if($property->getIsWriteOnly()) echo ' <em>write-only</em> '; ?>
+			property
 			<?php if(!empty($property->since)): ?>
 				(available since version <?php echo $property->since; ?>)
 			<?php endif; ?>
@@ -34,7 +35,7 @@ ArrayHelper::multisort($properties, 'name');
 
 	<div class="signature"><?php echo $this->context->renderPropertySignature($property); ?></div>
 
-	<p><?= ApiMarkdown::process($property->description, $type) ?></p>
+	<?= ApiMarkdown::process($property->description, $type) ?>
 
 	<?= $this->render('seeAlso', ['object' => $property]); ?>
 

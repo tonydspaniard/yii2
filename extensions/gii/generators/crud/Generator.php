@@ -16,9 +16,13 @@ use yii\helpers\Inflector;
 use yii\web\Controller;
 
 /**
+ * Generates CRUD
  *
+ * @property array $columnNames Model column names. This property is read-only.
  * @property string $controllerID The controller ID (without the module ID prefix). This property is
  * read-only.
+ * @property array $searchAttributes Searchable attributes. This property is read-only.
+ * @property boolean|\yii\db\TableSchema $tableSchema This property is read-only.
  * @property string $viewPath The action view file path. This property is read-only.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>

@@ -1,13 +1,13 @@
 <?php
 namespace yiiunit\framework\db;
 
-use yii\db\ActiveQuery;
 use yiiunit\data\ar\ActiveRecord;
 use yiiunit\data\ar\Customer;
 use yiiunit\data\ar\NullValues;
 use yiiunit\data\ar\OrderItem;
 use yiiunit\data\ar\Order;
 use yiiunit\data\ar\Item;
+use yiiunit\data\ar\Profile;
 use yiiunit\framework\ar\ActiveRecordTestTrait;
 
 /**
@@ -130,6 +130,22 @@ class ActiveRecordTest extends DatabaseTestCase
 		$this->assertEquals(2, count($order['books']));
 		$this->assertEquals(1, $order['books'][0]['id']);
 		$this->assertEquals(2, $order['books'][1]['id']);
+	}
+
+	// deeply nested table relation
+	public function testDeeplyNestedTableRelation()
+	{
+		/** @var Customer $customer */
+		$customer = $this->callCustomerFind(1);
+		$this->assertNotNull($customer);
+
+		$items = $customer->orderItems;
+
+		$this->assertEquals(2, count($items));
+		$this->assertInstanceOf(Item::className(), $items[0]);
+		$this->assertInstanceOf(Item::className(), $items[1]);
+		$this->assertEquals(1, $items[0]->id);
+		$this->assertEquals(2, $items[1]->id);
 	}
 
 	public function testStoreNull()
@@ -324,5 +340,86 @@ class ActiveRecordTest extends DatabaseTestCase
 		$this->assertEquals(2, count($orders[0]->books2));
 		$this->assertEquals(0, count($orders[1]->books2));
 		$this->assertEquals(1, count($orders[2]->books2));
+	}
+
+	public function testJoinWithAndScope()
+	{
+		// hasOne inner join
+		$customers = Customer::find()->active()->innerJoinWith('profile')->orderBy('tbl_customer.id')->all();
+		$this->assertEquals(1, count($customers));
+		$this->assertEquals(1, $customers[0]->id);
+		$this->assertTrue($customers[0]->isRelationPopulated('profile'));
+
+		// hasOne outer join
+		$customers = Customer::find()->active()->joinWith('profile')->orderBy('tbl_customer.id')->all();
+		$this->assertEquals(2, count($customers));
+		$this->assertEquals(1, $customers[0]->id);
+		$this->assertEquals(2, $customers[1]->id);
+		$this->assertTrue($customers[0]->isRelationPopulated('profile'));
+		$this->assertTrue($customers[1]->isRelationPopulated('profile'));
+		$this->assertInstanceOf(Profile::className(), $customers[0]->profile);
+		$this->assertNull($customers[1]->profile);
+
+		// hasMany
+		$customers = Customer::find()->active()->joinWith('orders')->orderBy('tbl_customer.id DESC, tbl_order.id')->all();
+		$this->assertEquals(2, count($customers));
+		$this->assertEquals(2, $customers[0]->id);
+		$this->assertEquals(1, $customers[1]->id);
+		$this->assertTrue($customers[0]->isRelationPopulated('orders'));
+		$this->assertTrue($customers[1]->isRelationPopulated('orders'));
+
+	}
+
+	public function testInverseOf()
+	{
+		// eager loading: find one and all
+		$customer = Customer::find()->with('orders2')->where(['id' => 1])->one();
+		$this->assertTrue($customer->orders2[0]->customer2 === $customer);
+		$customers = Customer::find()->with('orders2')->where(['id' => [1, 3]])->all();
+		$this->assertTrue($customers[0]->orders2[0]->customer2 === $customers[0]);
+		$this->assertTrue(empty($customers[1]->orders2));
+		// lazy loading
+		$customer = Customer::find(2);
+		$orders = $customer->orders2;
+		$this->assertTrue(count($orders) === 2);
+		$this->assertTrue($customer->orders2[0]->customer2 === $customer);
+		$this->assertTrue($customer->orders2[1]->customer2 === $customer);
+		// ad-hoc lazy loading
+		$customer = Customer::find(2);
+		$orders = $customer->getOrders2()->all();
+		$this->assertTrue(count($orders) === 2);
+		$this->assertTrue($customer->orders2[0]->customer2 === $customer);
+		$this->assertTrue($customer->orders2[1]->customer2 === $customer);
+
+		// the other way around
+		$customer = Customer::find()->with('orders2')->where(['id' => 1])->asArray()->one();
+		$this->assertTrue($customer['orders2'][0]['customer2']['id'] === $customer['id']);
+		$customers = Customer::find()->with('orders2')->where(['id' => [1, 3]])->asArray()->all();
+		$this->assertTrue($customer['orders2'][0]['customer2']['id'] === $customers[0]['id']);
+		$this->assertTrue(empty($customers[1]['orders2']));
+
+		$orders = Order::find()->with('customer2')->where(['id' => 1])->all();
+		$this->assertTrue($orders[0]->customer2->orders2 === [$orders[0]]);
+		$order = Order::find()->with('customer2')->where(['id' => 1])->one();
+		$this->assertTrue($order->customer2->orders2 === [$order]);
+
+		$orders = Order::find()->with('customer2')->where(['id' => 1])->asArray()->all();
+		$this->assertTrue($orders[0]['customer2']['orders2'][0]['id'] === $orders[0]['id']);
+		$order = Order::find()->with('customer2')->where(['id' => 1])->asArray()->one();
+		$this->assertTrue($order['customer2']['orders2'][0]['id'] === $orders[0]['id']);
+
+		$orders = Order::find()->with('customer2')->where(['id' => [1, 3]])->all();
+		$this->assertTrue($orders[0]->customer2->orders2 === [$orders[0]]);
+		$this->assertTrue($orders[1]->customer2->orders2 === [$orders[1]]);
+
+		$orders = Order::find()->with('customer2')->where(['id' => [2, 3]])->orderBy('id')->all();
+		$this->assertTrue($orders[0]->customer2->orders2 === $orders);
+		$this->assertTrue($orders[1]->customer2->orders2 === $orders);
+
+		$orders = Order::find()->with('customer2')->where(['id' => [2, 3]])->orderBy('id')->asArray()->all();
+		$this->assertTrue($orders[0]['customer2']['orders2'][0]['id'] === $orders[0]['id']);
+		$this->assertTrue($orders[0]['customer2']['orders2'][1]['id'] === $orders[1]['id']);
+		$this->assertTrue($orders[1]['customer2']['orders2'][0]['id'] === $orders[0]['id']);
+		$this->assertTrue($orders[1]['customer2']['orders2'][1]['id'] === $orders[1]['id']);
 	}
 }

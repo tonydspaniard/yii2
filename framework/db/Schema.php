@@ -111,7 +111,7 @@ abstract class Schema extends Object
 				return $this->_tables[$name] = $table;
 			}
 		}
-		return $this->_tables[$name] = $table = $this->loadTableSchema($realName);
+		return $this->_tables[$name] = $this->loadTableSchema($realName);
 	}
 
 	/**
@@ -287,6 +287,41 @@ abstract class Schema extends Object
 		} else {
 			throw new InvalidCallException('DB Connection is not active.');
 		}
+	}
+
+	/**
+	 * @return boolean whether this DBMS supports [savepoint](http://en.wikipedia.org/wiki/Savepoint).
+	 */
+	public function supportsSavepoint()
+	{
+		return $this->db->enableSavepoint;
+	}
+
+	/**
+	 * Creates a new savepoint.
+	 * @param string $name the savepoint name
+	 */
+	public function createSavepoint($name)
+	{
+		$this->db->createCommand("SAVEPOINT $name")->execute();
+	}
+
+	/**
+	 * Releases an existing savepoint.
+	 * @param string $name the savepoint name
+	 */
+	public function releaseSavepoint($name)
+	{
+		$this->db->createCommand("RELEASE SAVEPOINT $name")->execute();
+	}
+
+	/**
+	 * Rolls back to a previously created savepoint.
+	 * @param string $name the savepoint name
+	 */
+	public function rollBackSavepoint($name)
+	{
+		$this->db->createCommand("ROLLBACK TO SAVEPOINT $name")->execute();
 	}
 
 	/**
