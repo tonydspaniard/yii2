@@ -49,6 +49,13 @@ Yii Framework 2 Change Log
 - Bug #2502: Unclear error message when `$_SERVER['DOCUMENT_ROOT']` is empty (samdark)
 - Bug #2519: MessageSource removed translation messages when event handler was bound to `missingTranslation`-event (cebe)
 - Bug #2527: Source language for `app` message category was always `en` no matter which application `sourceLanguage` was used (samdark)
+- Bug #2559: Going back on browser history breaks GridView filtering with `Pjax` (tonydspaniard)
+- Bug #2607: `yii message` tool wasn't updating `message` table (mitalcoi)
+- Bug #2624: Html::textArea() should respect "name" option. (qiangxue)
+- Bug #2653: Fixed the bug that unsetting an unpopulated AR relation would trigger exception (qiangxue)
+- Bug #2681: Fixed the bug of php build-in server https://bugs.php.net/bug.php?id=66606 (dizews)
+- Bug #2695: Fixed the issue that `FileValidator::isEmpty()` always returns true for validate multiple files (ZhandosKz)
+- Bug #2740: Fixed the issue that `CaptchaAction::run()` was using obsolete `Controller::createUrl()` method (tonydspaniard)
 - Bug: Fixed `Call to a member function registerAssetFiles() on a non-object` in case of wrong `sourcePath` for an asset bundle (samdark)
 - Bug: Fixed incorrect event name for `yii\jui\Spinner` (samdark)
 - Bug: Json::encode() did not handle objects that implement JsonSerializable interface correctly (cebe)
@@ -56,7 +63,7 @@ Yii Framework 2 Change Log
 - Bug: Fixed the issue that query cache returns the same data for the same SQL but different query methods (qiangxue)
 - Bug: Fixed URL parsing so it's now properly giving 404 for URLs like `http://example.com//////site/about` (samdark)
 - Bug: Fixed `HelpController::getModuleCommands` issue where it attempts to scan a module's controller directory when it doesn't exist (jom)
-- Bug: Fixed an issue with Filehelper and not accessable directories which resulted in endless loop (cebe)
+- Bug: Fixed an issue with FileHelper and not accessible directories which resulted in endless loop (cebe)
 - Bug: Fixed `$model->load($data)` returned `true` if `$data` and `formName` were empty (samdark)
 - Bug: Fixed issue with `ActiveRelationTrait` preventing `ActiveQuery` from clearing events and behaviors on clone (jom)
 - Bug: `Query::queryScalar` wasn't making `SELECT DISTINCT` queries subqueries (jom)
@@ -68,10 +75,12 @@ Yii Framework 2 Change Log
 - Enh #1293: Replaced Console::showProgress() with a better approach. See Console::startProgress() for details (cebe)
 - Enh #1406: DB Schema support for Oracle Database (p0larbeer, qiangxue)
 - Enh #1437: Added ListView::viewParams (qiangxue)
+- Enh #1467: Added support for organizing controllers in subdirectories (qiangxue)
 - Enh #1469: ActiveRecord::find() now works with default conditions (default scope) applied by createQuery (cebe)
 - Enh #1476: Add yii\web\Session::handler property (nineinchnick)
 - Enh #1499: Added `ActionColumn::controller` property to support customizing the controller for handling GridView actions (qiangxue)
 - Enh #1523: Query conditions now allow to use the NOT operator (cebe)
+- Enh #1535: Improved `yii\web\User` to start session only when needed. Also prepared it for use without session. (qiangxue)
 - Enh #1562: Added `yii\bootstrap\Tabs::linkOptions` (kartik-v)
 - Enh #1572: Added `yii\web\Controller::createAbsoluteUrl()` (samdark)
 - Enh #1579: throw exception when the given AR relation name does not match in a case sensitive manner (qiangxue)
@@ -128,6 +137,10 @@ Yii Framework 2 Change Log
 - Enh #2499: Added ability to downgrade migrations by their absolute apply time (resurtm, gorcer)
 - Enh #2525: Added support for formatting file sizes with `yii\base\Formatter` (VinceG)
 - Enh #2526: Allow for null values in batchInsert (skotos)
+- Enh #2646: Added support for specifying hostinfo in the pattern of a URL rule (qiangxue)
+- Enh #2661: Added boolean column type support for SQLite (qiangxue)
+- Enh #2670: Changed `console\Controller::globalOptions()` to `options($actionId)` to (make it possible to) differentiate options per action (hqx)
+- Enh #2735: Added support for `DateTimeInterface` in `Formatter` (ivokund)
 - Enh: Added support for using arrays as option values for console commands (qiangxue)
 - Enh: Added `favicon.ico` and `robots.txt` to default application templates (samdark)
 - Enh: Added `Widget::autoIdPrefix` to support prefixing automatically generated widget IDs (qiangxue)
@@ -171,6 +184,10 @@ Yii Framework 2 Change Log
 	- Added `yii\web\Request::get($name = null, $defaultValue = null)` and `yii\web\Request::post($name = null, $defaultValue = null)` (samdark)
 - Chg #2059: Implemented git-flavored file excluding/filtering for `FileHelper` (nineinchnick)
 - Chg #2063: Removed `yii\web\Request::acceptTypes` and renamed `yii\web\Request::acceptedContentTypes` to `acceptableContentTypes` (qiangxue)
+- Chg #2146: Removed `ActiveRelation` class and `ActiveRelationInterface`, moved the functionality to `ActiveQuery`.
+             All relational queries are now directly served by `ActiveQuery` allowing to use custom scopes in relations
+             and also to declare arbitrary queries as relations.
+			 Also removed `ActiveRecordInterface::createActiveRelation()` (cebe)
 - Chg #2157: The '*' category pattern will match all categories that do not match any other patterns listed in `I18N::translations` (qiangxue, Ragazzo)
 - Chg #2161: Added ability to use `return` in `Widget::run` (samdark)
 - Chg #2173: Removed `StringHelper::diff()`, Moved `phpspec/php-diff` dependency from `yiisoft/yii2` to `yiisoft/yii2-gii` (samdark)
@@ -181,6 +198,15 @@ Yii Framework 2 Change Log
 - Chg #2405: The CSS class of `MaskedInput` now defaults to `form-control` (qiangxue)
 - Chg #2426: Changed URL creation method signatures to be consistent (samdark)
 - Chg #2544: Changed `DetailView`'s `name:format:label` to `attribute:format:label` to match `GridView` (samdark)
+- Chg #2603: `yii\base\ErrorException` now extends `\ErrorException` (samdark)
+- Chg #2629: `Module::controllerPath` is now read only, and all controller classes must be namespaced under `Module::controllerNamespace`. (qiangxue)
+- Chg #2630: API changes for URLs generation (samdark, qiangxue, cebe)
+	- Added `yii\helpers\Url`.
+	- Removed `yii\helpers\Html::url`, use `yii\helpers\Url::to` instead.
+	- Removed `yii\web\Controller::createUrl` and `yii\web\Controller::createAbsoluteUrl`, use `yii\helpers\Url::toRoute` instead.
+	- Removed `yii\web\Controller::getCanonicalUrl`, use `yii\helpers\Url::canonical` instead.
+- Chg #2691: Null parameters will not be included in the generated URLs by `UrlManager` (gonimar, qiangxue)
+- Chg #2734: `FileCache::keyPrefix` defaults to empty string now (qiangxue)
 - Chg: Renamed `yii\jui\Widget::clientEventsMap` to `clientEventMap` (qiangxue)
 - Chg: Renamed `ActiveRecord::getPopulatedRelations()` to `getRelatedRecords()` (qiangxue)
 - Chg: Renamed `attributeName` and `className` to `targetAttribute` and `targetClass` for `UniqueValidator` and `ExistValidator` (qiangxue)
@@ -193,10 +219,6 @@ Yii Framework 2 Change Log
 - Chg: Advanced app template: moved database connection DSN, login and password to `-local` config not to expose it to VCS (samdark)
 - Chg: Renamed `yii\web\Request::acceptedLanguages` to `acceptableLanguages` (qiangxue)
 - Chg: Removed implementation of `Arrayable` from `yii\Object` (qiangxue)
-- Chg #2146: Removed `ActiveRelation` class and `ActiveRelationInterface`, moved the functionality to `ActiveQuery`.
-             All relational queries are now directly served by `ActiveQuery` allowing to use custom scopes in relations
-             and also to declare arbitrary queries as relations.
-			 Also removed `ActiveRecordInterface::createActiveRelation()` (cebe)
 - Chg: The scripts in asset bundles are now registered in `View` at the end of `endBody()`. It was done in `endPage()` previously (qiangxue)
 - Chg: Renamed `csrf-var` to `csrf-param` for CSRF header name (Dilip)
 - Chg: The directory holding email templates is renamed from `mails` to `mail` (qiangxue)

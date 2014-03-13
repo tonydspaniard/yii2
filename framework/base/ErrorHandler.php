@@ -93,10 +93,9 @@ class ErrorHandler extends Component
 			return;
 		}
 
-		$useErrorView = !YII_DEBUG || $exception instanceof UserException;
-
 		$response = Yii::$app->getResponse();
-		$response->getHeaders()->removeAll();
+
+		$useErrorView = $response->format === \yii\web\Response::FORMAT_HTML && (!YII_DEBUG || $exception instanceof UserException);
 
 		if ($useErrorView && $this->errorAction !== null) {
 			$result = Yii::$app->runAction($this->errorAction);
@@ -120,15 +119,8 @@ class ErrorHandler extends Component
 					'exception' => $exception,
 				]);
 			}
-		} elseif ($exception instanceof Arrayable) {
-			$response->data = $exception;
 		} else {
-			$response->data = [
-				'type' => get_class($exception),
-				'name' => 'Exception',
-				'message' => $exception->getMessage(),
-				'code' => $exception->getCode(),
-			];
+			$response->data = $this->convertExceptionToArray($exception);
 		}
 
 		if ($exception instanceof HttpException) {
@@ -138,6 +130,28 @@ class ErrorHandler extends Component
 		}
 
 		$response->send();
+	}
+
+	/**
+	 * Converts an exception into an array.
+	 * @param \Exception $exception the exception being converted
+	 * @return array the array representation of the exception.
+	 */
+	protected function convertExceptionToArray($exception)
+	{
+		$array = [
+			'type' => get_class($exception),
+			'name' => $exception instanceof \yii\base\Exception || $exception instanceof \yii\base\ErrorException ? $exception->getName() : 'Exception',
+			'message' => $exception->getMessage(),
+			'code' => $exception->getCode(),
+		];
+		if ($exception instanceof HttpException) {
+			$array['status'] = $exception->statusCode;
+		}
+		if (($prev = $exception->getPrevious()) !== null) {
+			$array['previous'] = $this->convertExceptionToArray($prev);
+		}
+		return $array;
 	}
 
 	/**

@@ -1,6 +1,7 @@
 <?php
 namespace common\models;
 
+use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\web\IdentityInterface;
@@ -72,6 +73,14 @@ class User extends ActiveRecord implements IdentityInterface
 	}
 
 	/**
+	 * @inheritdoc
+	 */
+	public static function findIdentityByAccessToken($token)
+	{
+		throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
+	}
+
+	/**
 	 * Finds user by username
 	 *
 	 * @param string $username
@@ -132,7 +141,7 @@ class User extends ActiveRecord implements IdentityInterface
 	 * Validates password
 	 *
 	 * @param string $password password to validate
-	 * @return bool if password provided is valid for current user
+	 * @return boolean if password provided is valid for current user
 	 */
 	public function validatePassword($password)
 	{
@@ -187,6 +196,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 			['username', 'filter', 'filter' => 'trim'],
 			['username', 'required'],
+			['username', 'unique'],
 			['username', 'string', 'min' => 2, 'max' => 255],
 
 			['email', 'filter', 'filter' => 'trim'],

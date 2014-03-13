@@ -1,6 +1,4 @@
 <?php
-use yii\helpers\Html;
-
 /**
  * @var yii\debug\panels\ConfigPanel $panel
  */
@@ -37,4 +35,3 @@ echo $this->render('panels/config/table', [
 ]);
 
 echo $panel->getPhpInfo();
-?>

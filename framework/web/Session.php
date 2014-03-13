@@ -8,7 +8,6 @@
 namespace yii\web;
 
 use Yii;
-use yii\base\Arrayable;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
@@ -55,6 +54,7 @@ use yii\base\InvalidParamException;
  * be overwritten by this method. This property is write-only.
  * @property float $gCProbability The probability (percentage) that the GC (garbage collection) process is
  * started on every session initialization, defaults to 1 meaning 1% chance.
+ * @property boolean $hasSessionId Whether the current request has sent the session ID.
  * @property string $id The current session ID.
  * @property boolean $isActive Whether the session has started. This property is read-only.
  * @property SessionIterator $iterator An iterator for traversing the session variables. This property is
@@ -72,7 +72,7 @@ use yii\base\InvalidParamException;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Countable, Arrayable
+class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Countable
 {
 	/**
 	 * @var string the name of the session variable that stores the flash message data.
@@ -127,6 +127,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 		@session_start();
 
 		if ($this->getIsActive()) {
+			Yii::info('Session started', __METHOD__);
 			$this->updateFlashCounters();
 		} else {
 			$error = error_get_last();
@@ -204,7 +205,7 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 		if ($this->_hasSessionId === null) {
 			$name = $this->getName();
 			$request = Yii::$app->getRequest();
-			if (ini_get('session.use_cookie') && $request->getCookies()->getValue($name) !== null) {
+			if (ini_get('session.use_cookies') && !empty($_COOKIE[$name])) {
 				$this->_hasSessionId = true;
 			} elseif (!ini_get('use_only_cookies') && ini_get('use_trans_sid')) {
 				$this->_hasSessionId = $request->get($name) !== null;
@@ -596,15 +597,6 @@ class Session extends Component implements \IteratorAggregate, \ArrayAccess, \Co
 	{
 		$this->open();
 		return isset($_SESSION[$key]);
-	}
-
-	/**
-	 * @return array the list of all session variables in array
-	 */
-	public function toArray()
-	{
-		$this->open();
-		return $_SESSION;
 	}
 
 	/**

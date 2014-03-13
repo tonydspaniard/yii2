@@ -275,7 +275,18 @@ class BaseInflector
 		'Ā' => 'A', 'Č' => 'C', 'Ē' => 'E', 'Ģ' => 'G', 'Ī' => 'i', 'Ķ' => 'k', 'Ļ' => 'L', 'Ņ' => 'N',
 		'Š' => 'S', 'Ū' => 'u', 'Ž' => 'Z',
 		'ā' => 'a', 'č' => 'c', 'ē' => 'e', 'ģ' => 'g', 'ī' => 'i', 'ķ' => 'k', 'ļ' => 'l', 'ņ' => 'n',
-		'š' => 's', 'ū' => 'u', 'ž' => 'z'
+		'š' => 's', 'ū' => 'u', 'ž' => 'z',
+		//Vietnamese
+		'Ấ' => 'A', 'Ầ' => 'A', 'Ẩ' => 'A', 'Ẫ' => 'A', 'Ậ' => 'A',
+		'Ắ' => 'A', 'Ằ' => 'A', 'Ẳ' => 'A', 'Ẵ' => 'A', 'Ặ' => 'A',
+		'Ố' => 'O', 'Ồ' => 'O', 'Ổ' => 'O', 'Ỗ' => 'O', 'Ộ' => 'O',
+		'Ớ' => 'O', 'Ờ' => 'O', 'Ở' => 'O', 'Ỡ' => 'O', 'Ợ' => 'O',
+		'Ế' => 'E', 'Ề' => 'E', 'Ể' => 'E', 'Ễ' => 'E', 'Ệ' => 'E',
+		'ấ' => 'a', 'ầ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a', 'ậ' => 'a',
+		'ắ' => 'a', 'ằ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a', 'ặ' => 'a',
+		'ố' => 'o', 'ồ' => 'o', 'ổ' => 'o', 'ỗ' => 'o', 'ộ' => 'o',
+		'ớ' => 'o', 'ờ' => 'o', 'ở' => 'o', 'ỡ' => 'o', 'ợ' => 'o',
+		'ế' => 'e', 'ề' => 'e', 'ể' => 'e', 'ễ' => 'e', 'ệ' => 'e'
 	];
 
 	/**
@@ -321,7 +332,7 @@ class BaseInflector
 	 * Converts an underscored or CamelCase word into a English
 	 * sentence.
 	 * @param string $words
-	 * @param bool $ucAll whether to set all words to uppercase
+	 * @param boolean $ucAll whether to set all words to uppercase
 	 * @return string
 	 */
 	public static function titleize($words, $ucAll = false)
@@ -404,7 +415,7 @@ class BaseInflector
 	/**
 	 * Returns a human-readable string from $word
 	 * @param string $word the string to humanize
-	 * @param bool $ucAll whether to set all words to uppercase or not
+	 * @param boolean $ucAll whether to set all words to uppercase or not
 	 * @return string
 	 */
 	public static function humanize($word, $ucAll = false)
@@ -444,7 +455,7 @@ class BaseInflector
 	 * [[$transliteration]] array.
 	 * @param string $string An arbitrary string to convert
 	 * @param string $replacement The replacement to use for spaces
-	 * @param bool $lowercase whether to return the string in lowercase or not. Defaults to `true`.
+	 * @param boolean $lowercase whether to return the string in lowercase or not. Defaults to `true`.
 	 * @return string The converted string.
 	 */
 	public static function slug($string, $replacement = '-', $lowercase = true)
@@ -473,7 +484,7 @@ class BaseInflector
 
 	/**
 	 * Converts number to its ordinal English form. For example, converts 13 to 13th, 2 to 2nd ...
-	 * @param int $number the number to get its ordinal value
+	 * @param integer $number the number to get its ordinal value
 	 * @return string
 	 */
 	public static function ordinalize($number)

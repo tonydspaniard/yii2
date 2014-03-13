@@ -142,7 +142,7 @@ trait ActiveRelationTrait
 	 */
 	public function findFor($name, $model)
 	{
-		if ($model->hasMethod('get' . $name)) {
+		if (method_exists($model, 'get' . $name)) {
 			$method = new \ReflectionMethod($model, 'get' . $name);
 			$realName = lcfirst(substr($method->getName(), 3));
 			if ($realName !== $name) {
@@ -288,7 +288,7 @@ trait ActiveRelationTrait
 				foreach ($primaryModels as $i => $primaryModel) {
 					if ($primaryModels[$i][$primaryName] instanceof ActiveRecordInterface) {
 						$primaryModels[$i][$primaryName]->populateRelation($name, $primaryModel);
-					} elseif  (!empty($primaryModels[$i][$primaryName])) {
+					} elseif (!empty($primaryModels[$i][$primaryName])) {
 						$primaryModels[$i][$primaryName][$name] = $primaryModel;
 					}
 				}

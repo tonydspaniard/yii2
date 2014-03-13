@@ -45,17 +45,17 @@ class FunctionDoc extends BaseDoc
 
 		$this->isReturnByReference = $reflector->isByRef();
 
-		foreach($reflector->getArguments() as $arg) {
+		foreach ($reflector->getArguments() as $arg) {
 			$arg = new ParamDoc($arg, $context, ['sourceFile' => $this->sourceFile]);
 			$this->params[$arg->name] = $arg;
 		}
 
-		foreach($this->tags as $i => $tag) {
+		foreach ($this->tags as $i => $tag) {
 			if ($tag instanceof ThrowsTag) {
 				$this->exceptions[$tag->getType()] = $tag->getDescription();
 				unset($this->tags[$i]);
 			} elseif ($tag instanceof PropertyTag) {
-				 // ignore property tag
+				// ignore property tag
 			} elseif ($tag instanceof ParamTag) {
 				$paramName = $tag->getVariableName();
 				if (!isset($this->params[$paramName]) && $context !== null) {
@@ -73,7 +73,7 @@ class FunctionDoc extends BaseDoc
 			} elseif ($tag instanceof ReturnTag) {
 				$this->returnType = $tag->getType();
 				$this->returnTypes = $tag->getTypes();
-				$this->return = $tag->getDescription();
+				$this->return = ucfirst($tag->getDescription());
 				unset($this->tags[$i]);
 			}
 		}

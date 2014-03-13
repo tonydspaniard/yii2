@@ -17,7 +17,7 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 
 /**
- * This command manages application migrations.
+ * Manages application migrations.
  *
  * A migration means a set of persistent changes to the application environment
  * that is shared among different developers. For example, in an application
@@ -95,11 +95,12 @@ class MigrateController extends Controller
 	 * Returns the names of the global options for this command.
 	 * @return array the names of the global options for this command.
 	 */
-	public function globalOptions()
+	public function options($id)
 	{
-		return array_merge(parent::globalOptions(), [
-			'migrationPath', 'migrationTable', 'db', 'templateFile', 'interactive', 'color'
-		]);
+		return array_merge(parent::options($id),
+			['migrationPath', 'migrationTable', 'db'], // global for all actions
+			($id == 'create') ? ['templateFile'] : [] // action create
+		);
 	}
 
 	/**

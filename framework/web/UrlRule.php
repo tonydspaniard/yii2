@@ -134,6 +134,12 @@ class UrlRule extends Object implements UrlRuleInterface
 			$this->_template = '';
 			$this->pattern = '#^$#u';
 			return;
+		} elseif (($pos = strpos($this->pattern, '://')) !== false) {
+			if (($pos2 = strpos($this->pattern, '/', $pos + 3)) !== false) {
+				$this->host = substr($this->pattern, 0, $pos2);
+			} else {
+				$this->host = $this->pattern;
+			}
 		} else {
 			$this->pattern = '/' . $this->pattern . '/';
 		}
@@ -199,7 +205,7 @@ class UrlRule extends Object implements UrlRuleInterface
 			return false;
 		}
 
-		if ($this->verb !== null && !in_array($request->getMethod(), $this->verb, true)) {
+		if (!empty($this->verb) && !in_array($request->getMethod(), $this->verb, true)) {
 			return false;
 		}
 
@@ -323,8 +329,8 @@ class UrlRule extends Object implements UrlRuleInterface
 			$url .= ($this->suffix === null ? $manager->suffix : $this->suffix);
 		}
 
-		if (!empty($params)) {
-			$url .= '?' . http_build_query($params);
+		if (!empty($params) && ($query = http_build_query($params)) !== '') {
+			$url .= '?' . $query;
 		}
 		return $url;
 	}

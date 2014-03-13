@@ -9,6 +9,8 @@ namespace yii\data;
 
 use Yii;
 use yii\base\Object;
+use yii\web\Link;
+use yii\web\Linkable;
 use yii\web\Request;
 
 /**
@@ -57,17 +59,19 @@ use yii\web\Request;
  * @property integer $limit The limit of the data. This may be used to set the LIMIT value for a SQL statement
  * for fetching the current page of data. Note that if the page size is infinite, a value -1 will be returned.
  * This property is read-only.
+ * @property array $links The links for navigational purpose. The array keys specify the purpose of the links
+ * (e.g. [[LINK_FIRST]]), and the array values are the corresponding URLs. This property is read-only.
  * @property integer $offset The offset of the data. This may be used to set the OFFSET value for a SQL
  * statement for fetching the current page of data. This property is read-only.
  * @property integer $page The zero-based current page number.
  * @property integer $pageCount Number of pages. This property is read-only.
+ * @property integer $pageSize The number of items per page.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class Pagination extends Object
+class Pagination extends Object implements Linkable
 {
-	const LINK_SELF = 'self';
 	const LINK_NEXT = 'next';
 	const LINK_PREV = 'prev';
 	const LINK_FIRST = 'first';
@@ -301,7 +305,7 @@ class Pagination extends Object
 		$currentPage = $this->getPage();
 		$pageCount = $this->getPageCount();
 		$links = [
-			self::LINK_SELF => $this->createUrl($currentPage, $absolute),
+			Link::REL_SELF => $this->createUrl($currentPage, $absolute),
 		];
 		if ($currentPage > 0) {
 			$links[self::LINK_FIRST] = $this->createUrl(0, $absolute);

@@ -339,7 +339,7 @@ class Formatter extends Component
 	{
 		if (is_string($value)) {
 			return is_numeric($value) || $value === '' ? (int)$value : strtotime($value);
-		} elseif ($value instanceof DateTime) {
+		} elseif ($value instanceof DateTime || $value instanceof \DateTimeInterface) {
 			return $value->getTimestamp();
 		} else {
 			return (int)$value;
@@ -442,17 +442,17 @@ class Formatter extends Component
 		
 		switch($position) {
 			case 0:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# byte} other{# bytes}}', $params) : Yii::t('yii', '{n} B', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# byte} other{# bytes}}', $params) : Yii::t('yii', '{n} B', $params);
 			case 1:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# kilobyte} other{# kilobytes}}', $params) : Yii::t('yii','{n} KB', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# kilobyte} other{# kilobytes}}', $params) : Yii::t('yii', '{n} KB', $params);
 			case 2:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# megabyte} other{# megabytes}}', $params) : Yii::t('yii','{n} MB', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# megabyte} other{# megabytes}}', $params) : Yii::t('yii', '{n} MB', $params);
 			case 3:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# gigabyte} other{# gigabytes}}', $params) : Yii::t('yii','{n} GB', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# gigabyte} other{# gigabytes}}', $params) : Yii::t('yii', '{n} GB', $params);
 			case 4:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# terabyte} other{# terabytes}}', $params) : Yii::t('yii','{n} TB', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# terabyte} other{# terabytes}}', $params) : Yii::t('yii', '{n} TB', $params);
 			default:
-				return $verbose ? Yii::t('yii','{n, plural, =1{# petabyte} other{# petabytes}}', $params) : Yii::t('yii','{n} PB', $params);
+				return $verbose ? Yii::t('yii', '{n, plural, =1{# petabyte} other{# petabytes}}', $params) : Yii::t('yii', '{n} PB', $params);
 		}
 	}
 }

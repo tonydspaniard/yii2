@@ -4,6 +4,7 @@ namespace frontend\tests\unit\models;
 
 use Yii;
 use frontend\tests\unit\TestCase;
+use frontend\models\ContactForm;
 
 class ContactFormTest extends TestCase
 {
@@ -26,8 +27,7 @@ class ContactFormTest extends TestCase
 
 	public function testContact()
 	{
-		$model = $this->getMock('frontend\models\ContactForm', ['validate']);
-		$model->expects($this->once())->method('validate')->will($this->returnValue(true));
+		$model = new ContactForm();
 
 		$model->attributes = [
 			'name' => 'Tester',
@@ -36,13 +36,13 @@ class ContactFormTest extends TestCase
 			'body' => 'body of current message',
 		];
 
-		$model->contact('admin@example.com');
+		$model->sendEmail('admin@example.com');
 
 		$this->specify('email should be send', function () {
 			expect('email file should exist', file_exists($this->getMessageFile()))->true();
 		});
 
-		$this->specify('message should contain correct data', function () use($model) {
+		$this->specify('message should contain correct data', function () use ($model) {
 			$emailMessage = file_get_contents($this->getMessageFile());
 
 			expect('email should contain user name', $emailMessage)->contains($model->name);
@@ -56,5 +56,4 @@ class ContactFormTest extends TestCase
 	{
 		return Yii::getAlias(Yii::$app->mail->fileTransportPath) . '/testing_message.eml';
 	}
-
 }

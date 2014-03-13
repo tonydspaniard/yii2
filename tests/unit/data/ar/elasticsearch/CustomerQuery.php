@@ -1,5 +1,7 @@
 <?php
+
 namespace yiiunit\data\ar\elasticsearch;
+
 use yii\elasticsearch\ActiveQuery;
 
 /**
@@ -9,8 +11,7 @@ class CustomerQuery extends ActiveQuery
 {
 	public function active()
 	{
-		$this->andWhere(array('status' => 1));
+		$this->andWhere(['status' => 1]);
 		return $this;
 	}
 }
- 

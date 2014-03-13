@@ -10,6 +10,7 @@ namespace yii\grid;
 use Yii;
 use Closure;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 /**
  * ActionColumn is a column for the [[GridView]] widget that displays buttons for viewing and manipulating the items.
@@ -63,7 +64,7 @@ class ActionColumn extends Column
 	 */
 	public $buttons = [];
 	/**
-	 * @var callback a callback that creates a button URL using the specified model information.
+	 * @var callable a callback that creates a button URL using the specified model information.
 	 * The signature of the callback should be the same as that of [[createUrl()]].
 	 * If this property is not set, button URLs will be created using [[createUrl()]].
 	 */
@@ -88,6 +89,7 @@ class ActionColumn extends Column
 			$this->buttons['view'] = function ($url, $model) {
 				return Html::a('<span class="glyphicon glyphicon-eye-open"></span>', $url, [
 					'title' => Yii::t('yii', 'View'),
+					'data-pjax' => '0',
 				]);
 			};
 		}
@@ -95,6 +97,7 @@ class ActionColumn extends Column
 			$this->buttons['update'] = function ($url, $model) {
 				return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url, [
 					'title' => Yii::t('yii', 'Update'),
+					'data-pjax' => '0',
 				]);
 			};
 		}
@@ -102,8 +105,9 @@ class ActionColumn extends Column
 			$this->buttons['delete'] = function ($url, $model) {
 				return Html::a('<span class="glyphicon glyphicon-trash"></span>', $url, [
 					'title' => Yii::t('yii', 'Delete'),
-					'data-confirm' => Yii::t('yii', 'Are you sure to delete this item?'),
+					'data-confirm' => Yii::t('yii', 'Are you sure you want to delete this item?'),
 					'data-method' => 'post',
+					'data-pjax' => '0',
 				]);
 			};
 		}
@@ -125,7 +129,7 @@ class ActionColumn extends Column
 		} else {
 			$params = is_array($key) ? $key : ['id' => (string)$key];
 			$params[0] = $this->controller ? $this->controller . '/' . $action : $action;
-			return Yii::$app->controller->createUrl($params);
+			return Url::toRoute($params);
 		}
 	}
 

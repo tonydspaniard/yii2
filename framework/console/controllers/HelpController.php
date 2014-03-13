@@ -16,7 +16,7 @@ use yii\helpers\Console;
 use yii\helpers\Inflector;
 
 /**
- * This command provides help information about console commands.
+ * Provides help information about console commands.
  *
  * This command displays the available command list in
  * the application or the detailed instructions about using
@@ -82,6 +82,32 @@ class HelpController extends Controller
 	}
 
 	/**
+	 * Returns an array of commands an their descriptions.
+	 * @return array all available commands as keys and their description as values.
+	 */
+	protected function getCommandDescriptions()
+	{
+		$descriptions = [];
+		foreach ($this->getCommands() as $command) {
+			$description = '';
+
+			$result = Yii::$app->createController($command);
+			if ($result !== false) {
+				list($controller, $actionID) = $result;
+				$class = new \ReflectionClass($controller);
+
+				$docLines = preg_split('~(\n|\r|\r\n)~', $class->getDocComment());
+				if (isset($docLines[1])) {
+					$description = trim($docLines[1], ' *');
+				}
+			}
+
+			$descriptions[$command] = $description;
+		}
+		return $descriptions;
+	}
+
+	/**
 	 * Returns all available actions of the specified controller.
 	 * @param Controller $controller the controller instance
 	 * @return array all available action IDs.
@@ -141,11 +167,19 @@ class HelpController extends Controller
 	 */
 	protected function getHelp()
 	{
-		$commands = $this->getCommands();
+		$commands = $this->getCommandDescriptions();
 		if (!empty($commands)) {
 			$this->stdout("\nThe following commands are available:\n\n", Console::BOLD);
-			foreach ($commands as $command) {
-				echo "- " . $this->ansiFormat($command, Console::FG_YELLOW) . "\n";
+			$len = 0;
+			foreach ($commands as $command => $description) {
+				if (($l = strlen($command)) > $len) {
+					$len = $l;
+				}
+			}
+			foreach ($commands as $command => $description) {
+				echo "- " . $this->ansiFormat($command, Console::FG_YELLOW);
+				echo str_repeat(' ', $len + 3 - strlen($command)) . $description;
+				echo "\n";
 			}
 			$scriptName = $this->getScriptName();
 			$this->stdout("\nTo see the help of each command, enter:\n", Console::BOLD);
@@ -253,7 +287,7 @@ class HelpController extends Controller
 		}
 
 		$tags = $this->parseComment($method->getDocComment());
-		$options = $this->getOptionHelps($controller);
+		$options = $this->getOptionHelps($controller, $actionID);
 
 		if ($tags['description'] !== '') {
 			$this->stdout("\nDESCRIPTION\n", Console::BOLD);
@@ -283,7 +317,6 @@ class HelpController extends Controller
 			echo implode("\n\n", array_merge($required, $optional)) . "\n\n";
 		}
 
-		$options = $this->getOptionHelps($controller);
 		if (!empty($options)) {
 			$this->stdout("\nOPTIONS\n\n", Console::BOLD);
 			echo implode("\n\n", $options) . "\n\n";
@@ -326,11 +359,12 @@ class HelpController extends Controller
 	/**
 	 * Returns the help information about the options available for a console controller.
 	 * @param Controller $controller the console controller
+	 * @param string $actionID name of the action, if set include local options for that action
 	 * @return array the help information about the options
 	 */
-	protected function getOptionHelps($controller)
+	protected function getOptionHelps($controller, $actionID)
 	{
-		$optionNames = $controller->globalOptions();
+		$optionNames = $controller->options($actionID);
 		if (empty($optionNames)) {
 			return [];
 		}

@@ -8,6 +8,7 @@ use yii\gii\CodeFile;
  * @var \yii\gii\Generator $generator
  * @var CodeFile[] $files
  * @var array $answers
+ * @var string $id panel ID
  */
 ?>
 <div class="default-view-files">
@@ -46,9 +47,9 @@ use yii\gii\CodeFile;
 			?>
 			<tr class="<?= "$file->operation $trClass" ?>">
 				<td class="file">
-					<?= Html::a(Html::encode($file->getRelativePath()), ['preview', 'file' => $file->id], ['class' => 'preview-code', 'data-title' => $file->getRelativePath()]) ?>
+					<?= Html::a(Html::encode($file->getRelativePath()), ['preview', 'id' => $id, 'file' => $file->id], ['class' => 'preview-code', 'data-title' => $file->getRelativePath()]) ?>
 					<?php if ($file->operation === CodeFile::OP_OVERWRITE): ?>
-						<?= Html::a('diff', ['diff', 'file' => $file->id], ['class' => 'diff-code label label-warning', 'data-title' => $file->getRelativePath()]) ?>
+						<?= Html::a('diff', ['diff', 'id' => $id, 'file' => $file->id], ['class' => 'diff-code label label-warning', 'data-title' => $file->getRelativePath()]) ?>
 					<?php endif; ?>
 				</td>
 				<td class="action">
@@ -81,7 +82,14 @@ use yii\gii\CodeFile;
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4><a class="modal-refresh glyphicon glyphicon-refresh" href="#"></a> <span class="modal-title">Modal title</span></h4>
+					<div class="btn-group pull-left">
+						<a class="modal-previous btn btn-xs btn-default" href="#" title="Previous File (Left Arrow)"><span class="glyphicon glyphicon-arrow-left"></span></a>
+						<a class="modal-next btn btn-xs btn-default" href="#" title="Next File (Right Arrow)"><span class="glyphicon glyphicon-arrow-right"></span></a>
+						<a class="modal-refresh btn btn-xs btn-default" href="#" title="Refresh File (R)"><span class="glyphicon glyphicon-refresh"></span></a>
+						&nbsp;
+					</div>
+					<strong class="modal-title pull-left">Modal title</strong>
+					<div class="clearfix"></div>
 				</div>
 				<div class="modal-body">
 					<p>Please wait ...</p>

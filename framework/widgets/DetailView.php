@@ -76,7 +76,7 @@ class DetailView extends Widget
 	 */
 	public $attributes;
 	/**
-	 * @var string|callback the template used to render a single attribute. If a string, the token `{label}`
+	 * @var string|callable the template used to render a single attribute. If a string, the token `{label}`
 	 * and `{value}` will be replaced with the label and the value of the corresponding attribute.
 	 * If a callback (e.g. an anonymous function), the signature must be as follows:
 	 *
@@ -91,6 +91,7 @@ class DetailView extends Widget
 	/**
 	 * @var array the HTML attributes for the container tag of this widget. The "tag" option specifies
 	 * what container tag should be used. It defaults to "table" if not set.
+	 * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
 	 */
 	public $options = ['class' => 'table table-striped table-bordered detail-view'];
 	/**
@@ -99,6 +100,7 @@ class DetailView extends Widget
 	 * instance. If this property is not set, the "formatter" application component will be used.
 	 */
 	public $formatter;
+
 
 	/**
 	 * Initializes the detail view.

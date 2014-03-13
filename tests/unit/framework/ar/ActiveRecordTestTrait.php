@@ -184,7 +184,7 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(['user3', 'user2', 'user1'], $this->callCustomerFind()->orderBy(['name' => SORT_DESC])->column('name'));
 	}
 
-	public function testfindIndexBy()
+	public function testFindIndexBy()
 	{
 		$customerClass = $this->getCustomerClass();
 		/** @var TestCase|ActiveRecordTestTrait $this */
@@ -205,7 +205,7 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($customers['3-user3'] instanceof $customerClass);
 	}
 
-	public function testfindIndexByAsArray()
+	public function testFindIndexByAsArray()
 	{
 		/** @var TestCase|ActiveRecordTestTrait $this */
 		// indexBy + asArray
@@ -356,11 +356,11 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(2, $this->callCustomerFind()->where(['OR', ['name' => 'user1'], ['name' => 'user2']])->count());
 		$this->assertEquals(2, count($this->callCustomerFind()->where(['OR', ['name' => 'user1'], ['name' => 'user2']])->all()));
 
-		$this->assertEquals(2, $this->callCustomerFind()->where(['name' => ['user1','user2']])->count());
-		$this->assertEquals(2, count($this->callCustomerFind()->where(['name' => ['user1','user2']])->all()));
+		$this->assertEquals(2, $this->callCustomerFind()->where(['name' => ['user1', 'user2']])->count());
+		$this->assertEquals(2, count($this->callCustomerFind()->where(['name' => ['user1', 'user2']])->all()));
 
-		$this->assertEquals(1, $this->callCustomerFind()->where(['AND', ['name' => ['user2','user3']], ['BETWEEN', 'status', 2, 4]])->count());
-		$this->assertEquals(1, count($this->callCustomerFind()->where(['AND', ['name' => ['user2','user3']], ['BETWEEN', 'status', 2, 4]])->all()));
+		$this->assertEquals(1, $this->callCustomerFind()->where(['AND', ['name' => ['user2', 'user3']], ['BETWEEN', 'status', 2, 4]])->count());
+		$this->assertEquals(1, count($this->callCustomerFind()->where(['AND', ['name' => ['user2', 'user3']], ['BETWEEN', 'status', 2, 4]])->all()));
 	}
 
 	public function testFindNullValues()
@@ -384,9 +384,9 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($this->callCustomerFind()->where(['name' => 'user1'])->exists());
 		$this->assertFalse($this->callCustomerFind()->where(['name' => 'user5'])->exists());
 
-		$this->assertTrue($this->callCustomerFind()->where(['id' => [2,3]])->exists());
-		$this->assertTrue($this->callCustomerFind()->where(['id' => [2,3]])->offset(1)->exists());
-		$this->assertFalse($this->callCustomerFind()->where(['id' => [2,3]])->offset(2)->exists());
+		$this->assertTrue($this->callCustomerFind()->where(['id' => [2, 3]])->exists());
+		$this->assertTrue($this->callCustomerFind()->where(['id' => [2, 3]])->offset(1)->exists());
+		$this->assertFalse($this->callCustomerFind()->where(['id' => [2, 3]])->offset(2)->exists());
 	}
 
 	public function testFindLazy()
@@ -398,6 +398,10 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($customer->isRelationPopulated('orders'));
 		$this->assertEquals(2, count($orders));
 		$this->assertEquals(1, count($customer->relatedRecords));
+
+		// unset
+		unset($customer['orders']);
+		$this->assertFalse($customer->isRelationPopulated('orders'));
 
 		/** @var Customer $customer */
 		$customer = $this->callCustomerFind(2);
@@ -422,6 +426,9 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(1, count($customers[1]->orders));
 		$this->assertEquals(2, count($customers[2]->orders));
 		$this->assertEquals(0, count($customers[3]->orders));
+		// unset
+		unset($customers[1]->orders);
+		$this->assertFalse($customers[1]->isRelationPopulated('orders'));
 
 		$customer = $this->callCustomerFind()->where(['id' => 1])->with('orders')->one();
 		$this->assertTrue($customer->isRelationPopulated('orders'));
@@ -847,7 +854,7 @@ trait ActiveRecordTestTrait
 		/** @var TestCase|ActiveRecordTestTrait $this */
 
 		$afterFindCalls = [];
-		Event::on(BaseActiveRecord::className(), BaseActiveRecord::EVENT_AFTER_FIND, function($event) use (&$afterFindCalls) {
+		Event::on(BaseActiveRecord::className(), BaseActiveRecord::EVENT_AFTER_FIND, function ($event) use (&$afterFindCalls) {
 			/** @var BaseActiveRecord $ar */
 			$ar = $event->sender;
 			$afterFindCalls[] = [get_class($ar), $ar->getIsNewRecord(), $ar->getPrimaryKey(), $ar->isRelationPopulated('orders')];

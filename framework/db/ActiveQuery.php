@@ -86,6 +86,10 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 	 * @see onCondition()
 	 */
 	public $on;
+	/**
+	 * @var array a list of relations that this query should be joined with
+	 */
+	public $joinWith;
 
 
 	/**
@@ -116,7 +120,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 			$this->findWith($this->with, $models);
 		}
 		if (!$this->asArray) {
-			foreach($models as $model) {
+			foreach ($models as $model) {
 				$model->afterFind();
 			}
 		}
@@ -239,6 +243,10 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 		}
 
 		if ($this->sql === null) {
+			if (!empty($this->joinWith)) {
+				$this->buildJoinWith();
+				$this->joinWith = null;    // clean it up to avoid issue https://github.com/yiisoft/yii2/issues/2687
+			}
 			list ($sql, $params) = $db->getQueryBuilder()->build($this);
 		} else {
 			$sql = $this->sql;
@@ -330,24 +338,32 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 	 */
 	public function joinWith($with, $eagerLoading = true, $joinType = 'LEFT JOIN')
 	{
-		$with = (array)$with;
-		$this->joinWithRelations(new $this->modelClass, $with, $joinType);
+		$this->joinWith[] = [(array)$with, $eagerLoading, $joinType];
+		return $this;
+	}
 
-		if (is_array($eagerLoading)) {
-			foreach ($with as $name => $callback) {
-				if (is_integer($name)) {
-					if (!in_array($callback, $eagerLoading, true)) {
+	private function buildJoinWith()
+	{
+		foreach ($this->joinWith as $config) {
+			list ($with, $eagerLoading, $joinType) = $config;
+			$this->joinWithRelations(new $this->modelClass, $with, $joinType);
+
+			if (is_array($eagerLoading)) {
+				foreach ($with as $name => $callback) {
+					if (is_integer($name)) {
+						if (!in_array($callback, $eagerLoading, true)) {
+							unset($with[$name]);
+						}
+					} elseif (!in_array($name, $eagerLoading, true)) {
 						unset($with[$name]);
 					}
-				} elseif (!in_array($name, $eagerLoading, true)) {
-					unset($with[$name]);
 				}
+			} elseif (!$eagerLoading) {
+				$with = [];
 			}
-		} elseif (!$eagerLoading) {
-			$with = [];
-		}
 
-		return $this->with($with);
+			$this->with($with);
+		}
 	}
 
 	/**
@@ -437,7 +453,14 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 			$modelClass = $query->modelClass;
 			$tableName = $modelClass::tableName();
 		} else {
-			$tableName = reset($query->from);
+			$tableName = '';
+			foreach ($query->from as $alias => $tableName) {
+				if (is_string($alias)) {
+					return [$tableName, $alias];
+				} else {
+					break;
+				}
+			}
 		}
 
 		if (preg_match('/^(.*?)\s+({{\w+}}|\w+)$/', $tableName, $matches)) {

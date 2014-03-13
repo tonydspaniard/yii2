@@ -15,10 +15,8 @@ use Yii;
  * @author Alexander Makarov <sam@rmcreative.ru>
  * @since 2.0
  */
-class ErrorException extends Exception
+class ErrorException extends \ErrorException
 {
-	protected $severity;
-
 	/**
 	 * Constructs the exception.
 	 * @link http://php.net/manual/en/errorexception.construct.php
@@ -66,21 +64,11 @@ class ErrorException extends Exception
 	 * Returns if error is one of fatal type.
 	 *
 	 * @param array $error error got from error_get_last()
-	 * @return bool if error is one of fatal type
+	 * @return boolean if error is one of fatal type
 	 */
 	public static function isFatalError($error)
 	{
 		return isset($error['type']) && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING]);
-	}
-
-	/**
-	 * Gets the exception severity.
-	 * @link http://php.net/manual/en/errorexception.getseverity.php
-	 * @return int the severity level of the exception.
-	 */
-	final public function getSeverity()
-	{
-		return $this->severity;
 	}
 
 	/**

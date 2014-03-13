@@ -22,10 +22,11 @@ class ListView extends BaseListView
 	 * @var array the HTML attributes for the container of the rendering result of each data model.
 	 * The "tag" element specifies the tag name of the container element and defaults to "div".
 	 * If "tag" is false, it means no container element will be rendered.
+	 * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
 	 */
 	public $itemOptions = [];
 	/**
-	 * @var string|callback the name of the view for rendering each data item, or a callback (e.g. an anonymous function)
+	 * @var string|callable the name of the view for rendering each data item, or a callback (e.g. an anonymous function)
 	 * for rendering each data item. If it specifies a view name, the following variables will
 	 * be available in the view:
 	 *
@@ -55,6 +56,7 @@ class ListView extends BaseListView
 	/**
 	 * @var array the HTML attributes for the container tag of the list view.
 	 * The "tag" element specifies the tag name of the container element and defaults to "div".
+	 * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
 	 */
 	public $options = ['class' => 'list-view'];
 

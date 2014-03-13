@@ -24,20 +24,20 @@ class PhpDocController extends Controller
 	public $defaultAction = 'property';
 
 	/**
-	 * @var bool whether to update class docs directly. Setting this to false will just output docs
+	 * @var boolean whether to update class docs directly. Setting this to false will just output docs
 	 * for copy and paste.
 	 */
 	public $updateFiles = true;
 
 	/**
-	 * Generates @property annotations in class files from getters and setters
+	 * Generates `@property annotations` in class files from getters and setters
 	 *
-	 * Property description will be taken from getter or setter or from an @property annotation
+	 * Property description will be taken from getter or setter or from an `@property annotation`
 	 * in the getters docblock if there is one defined.
 	 *
 	 * See https://github.com/yiisoft/yii2/wiki/Core-framework-code-style#documentation for details.
 	 *
-	 * @param null $root the directory to parse files from. Defaults to YII_PATH.
+	 * @param string $root the directory to parse files from. Defaults to YII_PATH.
 	 */
 	public function actionProperty($root = null)
 	{
@@ -61,11 +61,12 @@ class PhpDocController extends Controller
 				'/extensions/codeception/DbTestCase.php',
 				'/extensions/composer/',
 				'/extensions/gii/components/DiffRendererHtmlInline.php',
+				'/extensions/gii/generators/extension/templates/*',
 				'/extensions/twig/TwigSimpleFileLoader.php',
 				'/framework/BaseYii.php',
 				'/framework/Yii.php',
-				'/tests/',
-				'/vendor/',
+				'tests/',
+				'vendor/',
 			];
 		}
 		$root = FileHelper::normalizePath($root);
@@ -110,9 +111,12 @@ class PhpDocController extends Controller
 		$this->stdout("Updated $nFilesUpdated files.\n");
 	}
 
-	public function globalOptions()
+	/**
+	 * @inheritdoc
+	 */
+	public function options($id)
 	{
-		return array_merge(parent::globalOptions(), ['updateFiles']);
+		return array_merge(parent::options($id), ['updateFiles']);
 	}
 
 	protected function updateClassPropertyDocs($file, $className, $propertyDoc)
@@ -197,7 +201,7 @@ class PhpDocController extends Controller
 	}
 
 	/**
-	 * replace property annotations in doc comment
+	 * Replace property annotations in doc comment
 	 * @param $doc
 	 * @param $properties
 	 * @return string
@@ -311,7 +315,7 @@ class PhpDocController extends Controller
 						// check if parent class has setter defined
 						$c = $className;
 						$parentSetter = false;
-						while($parent = get_parent_class($c)) {
+						while ($parent = get_parent_class($c)) {
 							if (method_exists($parent, 'set' . ucfirst($propName))) {
 								$parentSetter = true;
 								break;
@@ -326,7 +330,7 @@ class PhpDocController extends Controller
 						// check if parent class has getter defined
 						$c = $className;
 						$parentGetter = false;
-						while($parent = get_parent_class($c)) {
+						while ($parent = get_parent_class($c)) {
 							if (method_exists($parent, 'set' . ucfirst($propName))) {
 								$parentGetter = true;
 								break;

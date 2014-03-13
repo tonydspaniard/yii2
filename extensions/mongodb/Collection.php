@@ -107,9 +107,67 @@ class Collection extends Object
 	{
 		$parts = [];
 		foreach ($arguments as $argument) {
-			$parts[] = is_scalar($argument) ? $argument : Json::encode($argument);
+			$parts[] = is_scalar($argument) ? $argument : $this->encodeLogData($argument);
 		}
 		return $this->getFullName() . '.' . $command . '(' . implode(', ', $parts) . ')';
+	}
+
+	/**
+	 * Encodes complex log data into JSON format string.
+	 * @param mixed $data raw data.
+	 * @return string encoded data string.
+	 */
+	protected function encodeLogData($data)
+	{
+		return json_encode($this->processLogData($data));
+	}
+
+	/**
+	 * Pre-processes the log data before sending it to `json_encode()`.
+	 * @param mixed $data raw data.
+	 * @return mixed the processed data.
+	 */
+	protected function processLogData($data)
+	{
+		if (is_object($data)) {
+			if ($data instanceof \MongoId ||
+				$data instanceof \MongoRegex ||
+				$data instanceof \MongoDate ||
+				$data instanceof \MongoInt32 ||
+				$data instanceof \MongoInt64 ||
+				$data instanceof \MongoTimestamp
+			) {
+				$data = get_class($data) . '(' . $data->__toString() . ')';
+			} elseif ($data instanceof \MongoCode) {
+				$data = 'MongoCode( ' . $data->__toString() . ' )';
+			} elseif ($data instanceof \MongoBinData) {
+				$data = 'MongoBinData(...)';
+			} elseif ($data instanceof \MongoDBRef) {
+				$data = 'MongoDBRef(...)';
+			} elseif ($data instanceof \MongoMinKey || $data instanceof \MongoMaxKey) {
+				$data = get_class($data);
+			} else {
+				$result = [];
+				foreach ($data as $name => $value) {
+					$result[$name] = $value;
+				}
+				$data = $result;
+			}
+
+			if ($data === []) {
+				return new \stdClass();
+			}
+		}
+
+		if (is_array($data)) {
+			foreach ($data as $key => $value) {
+				if (is_array($value) || is_object($value)) {
+					$data[$key] = $this->processLogData($value);
+				}
+			}
+		}
+
+		return $data;
 	}
 
 	/**
@@ -260,7 +318,7 @@ class Collection extends Object
 	}
 
 	/**
-	 * Returns a a single document.
+	 * Returns a single document.
 	 * @param array $condition query condition
 	 * @param array $fields fields to be selected
 	 * @return array|null the single document. Null is returned if the query results in nothing.
@@ -269,6 +327,32 @@ class Collection extends Object
 	public function findOne($condition = [], $fields = [])
 	{
 		return $this->mongoCollection->findOne($this->buildCondition($condition), $fields);
+	}
+
+	/**
+	 * Updates a document and returns it.
+	 * @param array $condition query condition
+	 * @param array $update update criteria
+	 * @param array $fields fields to be returned
+	 * @param array $options list of options in format: optionName => optionValue.
+	 * @return array|null the original document, or the modified document when $options['new'] is set.
+	 * @throws Exception on failure.
+	 * @see http://www.php.net/manual/en/mongocollection.findandmodify.php
+	 */
+	public function findAndModify($condition, $update, $fields = [], $options = [])
+	{
+		$condition = $this->buildCondition($condition);
+		$token = $this->composeLogToken('findAndModify', [$condition, $update, $fields, $options]);
+		Yii::info($token, __METHOD__);
+		try {
+			Yii::beginProfile($token, __METHOD__);
+			$result = $this->mongoCollection->findAndModify($condition, $update, $fields, $options);
+			Yii::endProfile($token, __METHOD__);
+			return $result;
+		} catch (\Exception $e) {
+			Yii::endProfile($token, __METHOD__);
+			throw new Exception($e->getMessage(), (int)$e->getCode(), $e);
+		}
 	}
 
 	/**
@@ -600,7 +684,8 @@ class Collection extends Object
 	 * @return array the highest scoring documents, in descending order by score.
 	 * @throws Exception on failure.
 	 */
-	public function fullTextSearch($search, $condition = [], $fields = [], $options = []) {
+	public function fullTextSearch($search, $condition = [], $fields = [], $options = [])
+	{
 		$command = [
 			'search' => $search
 		];
@@ -706,7 +791,13 @@ class Collection extends Object
 				$rawId = (string)$rawId;
 			}
 		}
-		return new \MongoId($rawId);
+		try {
+			$mongoId = new \MongoId($rawId);
+		} catch (\MongoException $e) {
+			// invalid id format
+			$mongoId = $rawId;
+		}
+		return $mongoId;
 	}
 
 	/**

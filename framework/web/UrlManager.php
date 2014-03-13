@@ -265,14 +265,14 @@ class UrlManager extends Component
 			if ($this->suffix !== null) {
 				$route .= $this->suffix;
 			}
-			if (!empty($params)) {
-				$route .= '?' . http_build_query($params);
+			if (!empty($params) && ($query = http_build_query($params)) !== '') {
+				$route .= '?' . $query;
 			}
 			return "$baseUrl/{$route}{$anchor}";
 		} else {
 			$url = "$baseUrl?{$this->routeParam}=$route";
-			if (!empty($params)) {
-				$url .= '&' . http_build_query($params);
+			if (!empty($params) && ($query = http_build_query($params)) !== '') {
+				$url .= '&' . $query;
 			}
 			return $url . $anchor;
 		}
@@ -292,9 +292,9 @@ class UrlManager extends Component
 		$params = (array)$params;
 		$url = $this->createUrl($params);
 		if (strpos($url, '://') === false) {
-			$url = $this->getHostInfo($schema) . $url;
+			$url = $this->getHostInfo() . $url;
 		}
-		if ($schema !== null && ($pos = strpos($url, '://')) !== false) {
+		if ($schema && ($pos = strpos($url, '://')) !== false) {
 			$url = $schema . substr($url, $pos);
 		}
 		return $url;

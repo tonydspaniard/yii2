@@ -27,7 +27,7 @@
 		</p>
 		<p>
 		There are two kinds of requirements being checked. Mandatory requirements are those that have to be met
-		to allow Yii to work as expected. There are also some optional requirements beeing checked which will
+		to allow Yii to work as expected. There are also some optional requirements being checked which will
 		show you a warning when they do not meet. You can use Yii framework without them but some specific
 		functionality may be not available in this case.
 		</p>
@@ -51,7 +51,7 @@
 
 		<table class="table table-bordered">
 			<tr><th>Name</th><th>Result</th><th>Required By</th><th>Memo</th></tr>
-			<?php foreach($requirements as $requirement): ?>
+			<?php foreach ($requirements as $requirement): ?>
 			<tr class="<?php echo $requirement['condition'] ? 'success' : ($requirement['mandatory'] ? 'error' : 'warning') ?>">
 				<td>
 				<?php echo $requirement['name'] ?>
