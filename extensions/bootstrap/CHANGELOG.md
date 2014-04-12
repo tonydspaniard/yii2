@@ -12,12 +12,13 @@ Yii Framework 2 bootstrap extension Change Log
 - Enh #1601: Added support for tagName and encodeLabel parameters in ButtonDropdown (omnilight)
 - Enh #1881: Improved `yii\bootstrap\NavBar` with `containerOptions`, `innerContainerOptions` and `renderInnerContainer` (creocoder)
 - Enh #2425: Tabs widget now selects first tab if no active tab is specified (samdark)
+- Enh #2634: Submenus will now be checked for being active (Alex-Code)
 - Enh #2643: Add size attribute to Modal (tof06)
 - Chg #1459: Update Collapse to use bootstrap 3 classes (tonydspaniard)
 - Chg #1820: Update Progress to use bootstrap 3 markup (samdark)
+- New #3029: Added `yii\bootstrap\ActiveForm` and `yii\bootstrap\ActiveField` (mikehaertl)
 
-
-2.0.0 alpha, December 1, 2013
+2.0.0-alpha, December 1, 2013
 -----------------------------
 
 - Initial release.

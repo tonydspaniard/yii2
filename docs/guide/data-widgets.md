@@ -1,6 +1,13 @@
 Data widgets
 ============
 
+GridView
+--------
+
+The [[yii\grid\GridView]] widget is a powerful tool to create a data grid that provides pagination, sorting
+and filtering of the data out of the box. See the [data grid section](data-grid.md) for more details.
+
+
 ListView
 --------
 
@@ -21,14 +28,14 @@ A typical usage of DetailView is as follows:
  
 ```php
 echo DetailView::widget([
-	'model' => $model,
-	'attributes' => [
-		'title',             // title attribute (in plain text)
-		'description:html',  // description attribute in HTML
-		[                    // the owner name of the model
-			'label' => 'Owner',
-			'value' => $model->owner->name,
-		],
-	],
+    'model' => $model,
+    'attributes' => [
+        'title',             // title attribute (in plain text)
+        'description:html',  // description attribute in HTML
+        [                    // the owner name of the model
+            'label' => 'Owner',
+            'value' => $model->owner->name,
+        ],
+    ],
 ]);
 ```

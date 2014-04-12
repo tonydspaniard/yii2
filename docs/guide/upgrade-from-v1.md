@@ -71,7 +71,7 @@ $object = Yii::createObject([
     'class' => 'MyClass',
     'property1' => 'abc',
     'property2' => 'cde',
-], $param1, $param2);
+], [$param1, $param2]);
 ```
 
 More on configuration can be found in the [Basic concepts section](basics.md).
@@ -113,7 +113,7 @@ If you need to handle all instances of a class instead of the object you can att
 
 ```php
 Event::on(ActiveRecord::className(), ActiveRecord::EVENT_AFTER_INSERT, function ($event) {
-	Yii::trace(get_class($event->sender) . ' is inserted.');
+    Yii::trace(get_class($event->sender) . ' is inserted.');
 });
 ```
 
@@ -150,6 +150,13 @@ accessible in any view file via `$this`. This is one of the biggest changes comp
 **`$this` in a view file no longer refers to the controller or widget object.**
 It refers to the view object that is used to render the view file. To access the controller
 or the widget object, you have to use `$this->context` now.
+
+For partial views, the [[yii\web\View|View]] class now includes a `render()` function. This creates another significant change in the usage of views compared to 1.1:
+**`$this->render(...)` does not output the processed content; you must echo it yourself.**
+
+```php
+echo $this->render('_item', ['item' => $item]);
+```
 
 Because you can access the view object through the "view" application component,
 you can now render a view file like the following anywhere in your code, not necessarily
@@ -256,8 +263,8 @@ echo \yii\widgets\Menu::widget(['items' => $items]);
 
 // Passing an array to initialize the object properties
 $form = \yii\widgets\ActiveForm::begin([
-	'options' => ['class' => 'form-horizontal'],
-	'fieldConfig' => ['inputOptions' => ['class' => 'input-xlarge']],
+    'options' => ['class' => 'form-horizontal'],
+    'fieldConfig' => ['inputOptions' => ['class' => 'input-xlarge']],
 ]);
 ... form inputs here ...
 \yii\widgets\ActiveForm::end();
@@ -318,7 +325,7 @@ Action Filters
 
 Action filters are implemented via behaviors now. You should extend from [[yii\base\ActionFilter]] to
 define a new filter. To use a filter, you should attach the filter class to the controller
-as a behavior. For example, to use the [[yii\web\AccessControl]] filter, you should have the following
+as a behavior. For example, to use the [[yii\filters\AccessControl]] filter, you should have the following
 code in a controller:
 
 ```php
@@ -326,7 +333,7 @@ public function behaviors()
 {
     return [
         'access' => [
-            'class' => 'yii\web\AccessControl',
+            'class' => 'yii\filters\AccessControl',
             'rules' => [
                 ['allow' => true, 'actions' => ['admin'], 'roles' => ['@']],
             ],
@@ -377,11 +384,11 @@ Using fields, you can build a form more cleanly than before:
 
 ```php
 <?php $form = yii\widgets\ActiveForm::begin(); ?>
-	<?= $form->field($model, 'username') ?>
-	<?= $form->field($model, 'password')->passwordInput() ?>
-	<div class="form-group">
-		<?= Html::submitButton('Login') ?>
-	</div>
+    <?= $form->field($model, 'username') ?>
+    <?= $form->field($model, 'password')->passwordInput() ?>
+    <div class="form-group">
+        <?= Html::submitButton('Login') ?>
+    </div>
 <?php yii\widgets\ActiveForm::end(); ?>
 ```
 
@@ -396,7 +403,7 @@ and [[yii\db\QueryBuilder|QueryBuilder]] to generate SQL statements from query o
 ```php
 $query = new \yii\db\Query();
 $query->select('id, name')
-      ->from('tbl_user')
+      ->from('user')
       ->limit(10);
 
 $command = $query->createCommand();
@@ -419,10 +426,10 @@ an [[yii\db\ActiveQuery|ActiveQuery]] object. For example, the following method 
 ```php
 class Customer extends \yii\db\ActiveRecord
 {
-	public function getOrders()
-	{
-		return $this->hasMany('Order', ['customer_id' => 'id']);
-	}
+    public function getOrders()
+    {
+        return $this->hasMany('Order', ['customer_id' => 'id']);
+    }
 }
 ```
 
@@ -443,11 +450,11 @@ use the [[yii\db\ActiveRecord::find()|find()]] method:
 ```php
 // to retrieve all *active* customers and order them by their ID:
 $customers = Customer::find()
-	->where(['status' => $active])
-	->orderBy('id')
-	->all();
+    ->where(['status' => $active])
+    ->orderBy('id')
+    ->all();
 // return the customer whose PK is 1
-$customer = Customer::find(1);
+$customer = Customer::findOne(1);
 ```
 
 
@@ -506,9 +513,9 @@ the same goal.
 
 ```php
 [
-	'pattern' => 'post/<page:\d+>/<tag>',
-	'route' => 'post/index',
-	'defaults' => ['page' => 1],
+    'pattern' => 'post/<page:\d+>/<tag>',
+    'route' => 'post/index',
+    'defaults' => ['page' => 1],
 ]
 ```
 
